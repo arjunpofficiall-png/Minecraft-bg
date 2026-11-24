@@ -1,0 +1,4507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Minecraft - arjun.official studio</title>
+  <style>
+    :root {
+      --mc-stone: #6d707d;
+      --mc-stone-light: #aeb2c2;
+      --mc-stone-dark: #2c2e36;
+      --mc-panel: #313236;
+      --mc-green: #389e48;
+      --mc-green-light: #6ee081;
+      --mc-gold: #f5a623;
+      --mc-danger: #b53535;
+    }
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      margin: 0;
+      padding: 0;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #120e0a;
+      touch-action: none;
+      color: #fff;
+    }
+    #game-canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+    }
+    #screen-fx {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 8;
+      transition: background 0.25s ease;
+    }
+
+    /* ==================== 20-SECOND MINECRAFT MONOLITH INTRO OVERLAY ==================== */
+    #studio-intro-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: 3.5vh;
+      transition: opacity 0.75s ease, visibility 0.75s ease;
+    }
+    #studio-intro-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    #intro-logo-canvas {
+      width: min(96vw, 760px);
+      height: auto;
+      aspect-ratio: 760 / 270;
+      image-rendering: pixelated;
+      pointer-events: none;
+      filter: drop-shadow(0 16px 28px rgba(0,0,0,0.95));
+    }
+    #intro-controls {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 6px;
+      z-index: 520;
+    }
+    .intro-stone-btn {
+      background: rgba(65, 68, 78, 0.88);
+      border-top: 2px solid #aeb2c2;
+      border-left: 2px solid #aeb2c2;
+      border-right: 2px solid #22242b;
+      border-bottom: 2px solid #22242b;
+      outline: 1.5px solid #000;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 5px 10px;
+      cursor: pointer;
+      text-shadow: 1px 1px 0 #000;
+    }
+    .intro-stone-btn:active {
+      background: var(--mc-green);
+      transform: translateY(1px);
+    }
+
+    .svg-ic {
+      width: 15px;
+      height: 15px;
+      fill: currentColor;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+      pointer-events: none;
+    }
+    .svg-ic.lg { width: 18px; height: 18px; }
+    .svg-ic.sm { width: 12px; height: 12px; }
+
+    /* ==================== CLASSIC MINECRAFT UI PAGES ==================== */
+    .ui-page {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(12, 10, 8, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+    .ui-page.dirt-bg {
+      background:
+        linear-gradient(rgba(0,0,0,0.66), rgba(0,0,0,0.8)),
+        repeating-conic-gradient(#3b2718 0% 25%, #2c1c10 0% 50%) 50% / 28px 28px;
+    }
+    .ui-page.hidden {
+      display: none !important;
+    }
+
+    .ui-card {
+      background: var(--mc-panel);
+      border-top: 3px solid #6c6e78;
+      border-left: 3px solid #6c6e78;
+      border-right: 3px solid #18191c;
+      border-bottom: 3px solid #18191c;
+      outline: 2px solid #000;
+      padding: 12px;
+      width: min(94vw, 460px);
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.92);
+      overflow: hidden;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #1b1c20;
+      padding-bottom: 6px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0.8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    .btn {
+      background: var(--mc-stone);
+      border-top: 2px solid var(--mc-stone-light);
+      border-left: 2px solid var(--mc-stone-light);
+      border-right: 2px solid var(--mc-stone-dark);
+      border-bottom: 2px solid var(--mc-stone-dark);
+      outline: 1.5px solid #000;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 8px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-shadow: 1px 1px 0 #000;
+    }
+    .btn:active {
+      transform: translateY(1px);
+      border-top-color: var(--mc-stone-dark);
+      border-left-color: var(--mc-stone-dark);
+    }
+    .btn.primary {
+      background: var(--mc-green);
+      border-top-color: var(--mc-green-light);
+      border-left-color: var(--mc-green-light);
+      border-right-color: #194d21;
+      border-bottom-color: #194d21;
+    }
+    .btn.danger {
+      background: var(--mc-danger);
+      border-top-color: #eb6b6b;
+      border-left-color: #eb6b6b;
+      border-right-color: #541414;
+      border-bottom-color: #541414;
+    }
+    .btn-close {
+      width: 26px;
+      height: 26px;
+      background: #555866;
+      border: 2px solid #8e92a3;
+      outline: 1px solid #000;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .title-hub {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      width: min(88vw, 310px);
+    }
+    #title-logo-canvas {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 480 / 155;
+      image-rendering: pixelated;
+      margin-bottom: 2px;
+      filter: drop-shadow(0 8px 14px rgba(0,0,0,0.9));
+    }
+
+    .world-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      overflow-y: auto;
+      max-height: 60vh;
+    }
+    .form-group {
+      background: #202126;
+      border: 1.5px solid #454752;
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .form-lbl {
+      font-size: 9.5px;
+      color: #bbb;
+      font-weight: 800;
+    }
+    .mc-input {
+      background: #121316;
+      border: 1.5px solid #555866;
+      color: #fff;
+      padding: 5px 7px;
+      font-size: 11.5px;
+      font-weight: 700;
+      outline: none;
+      width: 100%;
+    }
+    .info-box {
+      background: rgba(56, 158, 72, 0.16);
+      border: 1.5px solid var(--mc-green);
+      padding: 6px 8px;
+      font-size: 10px;
+      line-height: 1.35;
+      color: #eee;
+      grid-column: span 2;
+    }
+
+    /* About Section Styling */
+    .about-box {
+      background: #1e1f24;
+      border: 2px solid #42444f;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+      max-height: 62vh;
+      font-size: 11px;
+      line-height: 1.45;
+      color: #e2e2e2;
+    }
+    .about-banner {
+      background:
+        linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.75)),
+        repeating-conic-gradient(#3b2718 0% 25%, #2c1c10 0% 50%) 50% / 20px 20px;
+      border: 2px solid var(--mc-gold);
+      padding: 8px;
+      text-align: center;
+    }
+    .about-feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .about-card {
+      background: #282a30;
+      border: 1.5px solid #484b57;
+      padding: 6px 8px;
+      font-size: 10px;
+    }
+    .about-card strong {
+      color: var(--mc-gold);
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .inv-layout {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 8px;
+      overflow-y: auto;
+      max-height: 58vh;
+    }
+    .slot-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+    .slot {
+      aspect-ratio: 1;
+      background: #8b8b8b;
+      border-top: 2px solid #373737;
+      border-left: 2px solid #373737;
+      border-right: 2px solid #ffffff;
+      border-bottom: 2px solid #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+    }
+    .slot:active { transform: scale(0.93); }
+    .slot.active {
+      outline: 2px solid var(--mc-gold);
+      background: #a8a8a8;
+      z-index: 2;
+    }
+    .slot.craftable {
+      background: #4e8752;
+      border-right-color: #8aff94;
+      border-bottom-color: #8aff94;
+    }
+    .slot canvas {
+      width: 74%;
+      height: 74%;
+      image-rendering: pixelated;
+      pointer-events: none;
+    }
+    .slot-badge {
+      position: absolute;
+      bottom: 1px;
+      right: 2px;
+      font-size: 9px;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 1px 1px 0 #000;
+      pointer-events: none;
+    }
+
+    .settings-body {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow-y: auto;
+      max-height: 55vh;
+    }
+    .setting-item {
+      background: #202126;
+      border: 1px solid #424552;
+      padding: 7px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    input[type="range"] {
+      width: 105px;
+      accent-color: var(--mc-green);
+      cursor: pointer;
+    }
+
+    /* ==================== IN-GAME HUD ==================== */
+    #hud-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+    #hud-layer.hidden {
+      display: none !important;
+    }
+    #look-zone {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 65vw;
+      height: 100vh;
+      pointer-events: auto;
+      touch-action: none;
+      z-index: 12;
+    }
+    #crosshair {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 14px;
+      height: 14px;
+      transform: translate(-50%, -50%);
+      z-index: 15;
+      pointer-events: none;
+    }
+    #crosshair::before, #crosshair::after {
+      content: '';
+      position: absolute;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 0 2px #000;
+    }
+    #crosshair::before { top: 6px; left: 0; width: 14px; height: 2px; }
+    #crosshair::after { top: 0; left: 6px; width: 2px; height: 14px; }
+
+    #mining-ring {
+      position: fixed;
+      top: calc(50% + 12px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: 36px;
+      height: 4px;
+      background: rgba(0,0,0,0.75);
+      border: 1px solid #fff;
+      display: none;
+      z-index: 15;
+      pointer-events: none;
+    }
+    #mining-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--mc-green-light);
+    }
+
+    #hud-telemetry {
+      position: fixed;
+      top: 6px;
+      left: 6px;
+      font-size: 9.5px;
+      font-weight: 800;
+      background: rgba(20, 18, 15, 0.78);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 3px 7px;
+      z-index: 25;
+      pointer-events: none;
+      text-shadow: 1px 1px 0 #000;
+    }
+
+    #mc-top-bar {
+      position: fixed;
+      top: 6px;
+      right: 6px;
+      display: flex;
+      gap: 5px;
+      z-index: 50;
+      pointer-events: auto;
+    }
+    .top-bar-btn {
+      height: 28px;
+      padding: 0 9px;
+      background: rgba(95, 98, 108, 0.92);
+      border-top: 2px solid #c2c6d6;
+      border-left: 2px solid #c2c6d6;
+      border-right: 2px solid #282a30;
+      border-bottom: 2px solid #282a30;
+      outline: 1.5px solid #000;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      touch-action: manipulation;
+      text-shadow: 1px 1px 0 #000;
+    }
+    .top-bar-btn:active {
+      background: var(--mc-green);
+      transform: translateY(1px);
+    }
+
+    #bottom-dock {
+      position: fixed;
+      bottom: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      pointer-events: auto;
+      z-index: 40;
+    }
+    #fade-item-label {
+      font-size: 10px;
+      font-weight: 800;
+      background: rgba(0,0,0,0.72);
+      padding: 2px 8px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
+      text-shadow: 1px 1px 0 #000;
+    }
+    #fade-item-label.visible { opacity: 1; }
+
+    .vitals-row {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 1px;
+      min-height: 9px;
+      pointer-events: none;
+    }
+    .vital-group {
+      display: flex;
+      gap: 1px;
+    }
+    .vital-svg {
+      width: 9.5px;
+      height: 9.5px;
+      filter: drop-shadow(1px 1px 0 #000);
+    }
+
+    #xp-wrap {
+      width: 100%;
+      height: 4px;
+      background: #111;
+      border: 1px solid #000;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    #xp-fill {
+      width: 0%;
+      height: 100%;
+      background: #7fff00;
+    }
+    #xp-lvl-badge {
+      font-size: 9px;
+      font-weight: 900;
+      color: #99ff33;
+      text-shadow: 1px 1px 0 #000;
+      margin-bottom: -2px;
+      pointer-events: none;
+    }
+
+    #hotbar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    #hotbar {
+      display: flex;
+      gap: 2px;
+      background: #4a4a4a;
+      border: 2px solid #222;
+      outline: 1.5px solid #000;
+      padding: 2px;
+    }
+    #hotbar .slot {
+      width: 29px;
+      height: 29px;
+    }
+    #hotbar-bag-btn {
+      width: 31px;
+      height: 33px;
+      background: #5c606e;
+      border-top: 2px solid #aeb2c2;
+      border-left: 2px solid #aeb2c2;
+      border-right: 2px solid #222;
+      border-bottom: 2px solid #222;
+      outline: 1.5px solid #000;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    #hotbar-bag-btn:active { background: var(--mc-green); }
+
+    #joystick-zone {
+      position: fixed;
+      bottom: 54px;
+      left: 12px;
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      background: rgba(14, 17, 24, 0.35);
+      border: 1.5px solid rgba(255, 255, 255, 0.28);
+      pointer-events: auto;
+      touch-action: none;
+      z-index: 35;
+    }
+    #joystick-knob {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 32px;
+      height: 32px;
+      margin-left: -16px;
+      margin-top: -16px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1.5px solid #111;
+      pointer-events: none;
+    }
+    #action-cluster {
+      position: fixed;
+      bottom: 52px;
+      right: 12px;
+      display: grid;
+      grid-template-columns: repeat(2, 40px);
+      gap: 5px;
+      pointer-events: auto;
+      z-index: 35;
+    }
+    .act-btn {
+      width: 40px;
+      height: 40px;
+      background: rgba(90, 94, 107, 0.8);
+      border-top: 2px solid #c2c6d6;
+      border-left: 2px solid #c2c6d6;
+      border-right: 2px solid #2b2d33;
+      border-bottom: 2px solid #2b2d33;
+      outline: 1px solid #000;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: none;
+    }
+    .act-btn:active, .act-btn.pressed {
+      background: var(--mc-green);
+      transform: scale(0.92);
+    }
+    .act-btn.toggled {
+      background: #b57c1e;
+    }
+
+    @media (max-width: 600px) {
+      .inv-layout, .world-form-grid, .about-feature-grid { grid-template-columns: 1fr; }
+      .info-box { grid-column: span 1; }
+      #hotbar .slot { width: 26px; height: 26px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Custom SVG Sprite Sheet -->
+  <svg style="display:none;" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <symbol id="ic-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
+      <symbol id="ic-world" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></symbol>
+      <symbol id="ic-info" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></symbol>
+      <symbol id="ic-settings" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.6 3.6 0 0112 15.6z"/></symbol>
+      <symbol id="ic-folder" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></symbol>
+      <symbol id="ic-save" viewBox="0 0 24 24"><path d="M17 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></symbol>
+      <symbol id="ic-close" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></symbol>
+      <symbol id="ic-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></symbol>
+      <symbol id="ic-pack" viewBox="0 0 24 24"><path d="M21 16.5c0 .38-.21.71-.53.88l-7.9 4.44c-.16.12-.36.18-.57.18-.21 0-.41-.06-.57-.18l-7.9-4.44A.991.991 0 013 16.5v-9c0-.38.21.71.53-.88l7.9-4.44c.16-.12.36-.18.57-.18.21 0 .41.06.57.18l7.9 4.44c.32.17.53.5.53.88v9zM12 4.15L6.04 7.5 12 10.85l5.96-3.35L12 4.15zM5 15.91l6 3.38v-6.71L5 9.21v6.7zm14 0v-6.7l-6 3.37v6.71l6-3.38z"/></symbol>
+      <symbol id="ic-cam" viewBox="0 0 24 24"><path d="M12 9a3.5 3.5 0 100 7 3.5 3.5 0 000-7zm8-3h-3.17l-1.83-2H9L7.17 6H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-8 12c-3.03 0-5.5-2.47-5.5-5.5S8.97 7 12 7s5.5 2.47 5.5 5.5S15.03 18 12 18z"/></symbol>
+      <symbol id="ic-pickaxe" viewBox="0 0 24 24"><path d="M14.7 3.3c2.4-.7 5.1.1 6.8 1.8 1.7 1.7 2.5 4.4 1.8 6.8l-2.3-.7c.4-1.6-.1-3.3-1.3-4.5-1.2-1.2-2.9-1.7-4.5-1.3l-.5-2.1zM3 19.6L15.6 7l1.4 1.4L4.4 21 3 19.6z"/></symbol>
+      <symbol id="ic-block" viewBox="0 0 24 24"><path d="M12 2L3 7v10l9 5 9-5V7l-9-5zm0 2.3L18.6 8 12 11.7 5.4 8 12 4.3zM5 9.8l6 3.3v6.8l-6-3.3V9.8zm8 10.1v-6.8l6-3.3v6.8l-6 3.3z"/></symbol>
+      <symbol id="ic-sword" viewBox="0 0 24 24"><path d="M19.8 2.2l-9.9 9.9-2.1-2.1-1.4 1.4 2.1 2.1-5.3 5.3 2.8 2.8 5.3-5.3 2.1 2.1 1.4-1.4-2.1-2.1 9.9-9.9V2.2h-2.8z"/></symbol>
+      <symbol id="ic-jump" viewBox="0 0 24 24"><path d="M12 4l-8 8h5v8h6v-8h5z"/></symbol>
+      <symbol id="ic-sprint" viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></symbol>
+      <symbol id="ic-sound" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></symbol>
+      <symbol id="ic-heart" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></symbol>
+      <symbol id="ic-shield" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></symbol>
+      <symbol id="ic-hunger" viewBox="0 0 24 24"><path d="M16.5 3C13.5 3 11 5.5 11 8.5c0 1.2.4 2.3 1 3.2L5.7 18c-.8.8-.8 2 0 2.8.8.8 2 .8 2.8 0l6.3-6.3c.9.6 2 1 3.2 1 3 0 5.5-2.5 5.5-5.5S19.5 3 16.5 3z"/></symbol>
+      <symbol id="ic-bubble" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="9" cy="9" r="2.2"/></symbol>
+    </defs>
+  </svg>
+
+  <canvas id="game-canvas"></canvas>
+  <div id="screen-fx"></div>
+
+  <!-- ==================== 20-SECOND MINECRAFT MONOLITH STUDIO INTRO OVERLAY ==================== -->
+  <div id="studio-intro-overlay">
+    <div id="intro-controls">
+      <button class="intro-stone-btn" id="btn-intro-audio" type="button">
+        <svg class="svg-ic sm"><use href="#ic-sound"/></svg> Enable Sound
+      </button>
+      <button class="intro-stone-btn" id="btn-intro-skip" type="button">Skip Intro</button>
+    </div>
+    <canvas id="intro-logo-canvas" width="760" height="270"></canvas>
+  </div>
+
+  <!-- ==================== 1. MINECRAFT TITLE SCREEN ==================== -->
+  <div id="page-title" class="ui-page hidden">
+    <div class="title-hub">
+      <canvas id="title-logo-canvas" width="480" height="155"></canvas>
+      <button class="btn primary" id="btn-open-create-world" style="width:100%; font-size:13px; padding:10px;">
+        <svg class="svg-ic"><use href="#ic-world"/></svg> Create New World
+      </button>
+      <button class="btn" id="btn-quick-resume" style="width:100%;">
+        <svg class="svg-ic"><use href="#ic-play"/></svg> Play Current World
+      </button>
+      <button class="btn" id="btn-open-settings" style="width:100%;">
+        <svg class="svg-ic"><use href="#ic-settings"/></svg> Options & Audio
+      </button>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; width:100%;">
+        <button class="btn" id="btn-load-world">
+          <svg class="svg-ic sm"><use href="#ic-folder"/></svg> Load Save
+        </button>
+        <button class="btn" id="btn-open-about">
+          <svg class="svg-ic sm"><use href="#ic-info"/></svg> About
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 2. ABOUT STUDIO & GAME PAGE ==================== -->
+  <div id="page-about" class="ui-page dirt-bg hidden">
+    <div class="ui-card">
+      <div class="card-header">
+        <span class="card-title"><svg class="svg-ic"><use href="#ic-info"/></svg> ABOUT ARJUN.OFFICIAL STUDIO</span>
+        <button class="btn-close" id="btn-about-close"><svg class="svg-ic sm"><use href="#ic-close"/></svg></button>
+      </div>
+      <div class="about-box">
+        <div class="about-banner">
+          <canvas id="about-logo-canvas" width="480" height="145" style="width:100%; max-width:360px; height:auto; image-rendering:pixelated;"></canvas>
+          <div style="font-size:10px; color:var(--mc-gold); font-weight:800; margin-top:4px;">
+            DESIGNED & DEVELOPED BY ARJUN PRASAD • ARJUN.OFFICIAL STUDIO
+          </div>
+        </div>
+        <div>
+          <strong>Minecraft Overworld Survival</strong> is an authentic voxel sandbox built by <strong>arjun.official studio</strong> featuring custom procedural pixel-art block textures, generative ambient music, natural acoustics, and sub-stepped 3D physics.
+        </div>
+        <div class="about-feature-grid">
+          <div class="about-card">
+            <strong>Rivers, Mountains & Waterfalls</strong>
+            Explore snow-capped mountain peaks with cascading waterfalls, winding rivers, and Oak trees draped with climbable 3D vines.
+          </div>
+          <div class="about-card">
+            <strong>Survival & Foraging Loop</strong>
+            Harvest Apples & Sweet Berries from 3D foliage, hunt animals for Raw Meat, Wool & Leather, cook Steak, and craft beds & armor.
+          </div>
+          <div class="about-card">
+            <strong>Natural Music & Acoustics</strong>
+            Generative C418-style ambient piano & pad music alongside natural walking footsteps, timber wood cutting, mineral stone cutting, and crafting sounds.
+          </div>
+          <div class="about-card">
+            <strong>Living Mobs & Physics</strong>
+            Articulated Pigs, Sheep, Cows, Zombies, and Creepers with obstacle-jumping physics and bouncing 3D collectible loot drops.
+          </div>
+        </div>
+      </div>
+      <button class="btn primary" id="btn-about-back">Back to Title Screen</button>
+    </div>
+  </div>
+
+  <!-- ==================== 3. CREATE NEW WORLD SCREEN ==================== -->
+  <div id="page-create-world" class="ui-page dirt-bg hidden">
+    <div class="ui-card">
+      <div class="card-header">
+        <span class="card-title"><svg class="svg-ic"><use href="#ic-world"/></svg> CREATE NEW WORLD</span>
+        <button class="btn-close" id="btn-create-back"><svg class="svg-ic sm"><use href="#ic-close"/></svg></button>
+      </div>
+
+      <div class="world-form-grid">
+        <div class="form-group">
+          <span class="form-lbl">WORLD NAME</span>
+          <input type="text" class="mc-input" id="inp-world-name" value="Arjun's Overworld" maxlength="24" />
+        </div>
+
+        <div class="form-group">
+          <span class="form-lbl">WORLD SEED</span>
+          <input type="text" class="mc-input" id="inp-world-seed" value="90210" maxlength="12" />
+        </div>
+
+        <div class="form-group">
+          <span class="form-lbl">GAME MODE</span>
+          <button class="btn" id="btn-cw-mode">Mode: Survival</button>
+        </div>
+
+        <div class="form-group">
+          <span class="form-lbl">DIFFICULTY</span>
+          <button class="btn" id="btn-cw-diff">Difficulty: Normal</button>
+        </div>
+
+        <div class="form-group">
+          <span class="form-lbl">TERRAIN PRESET</span>
+          <button class="btn" id="btn-cw-biome">Mountain & River</button>
+        </div>
+
+        <div class="form-group">
+          <span class="form-lbl">BONUS STARTER CHEST</span>
+          <button class="btn primary" id="btn-cw-chest">Bonus Chest: ON</button>
+        </div>
+
+        <div class="info-box">
+          <strong>World Details:</strong> Generates snow-capped <strong>Mountains</strong> with cascading <strong>Waterfalls</strong>, a winding <strong>River Valley</strong>, Oak trees draped with <strong>3D Vines</strong>, Campfires, Golden Apples, and dense horizon mist.
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1.4fr 1fr; gap:8px;">
+        <button class="btn primary" id="btn-generate-launch" style="padding:10px; font-size:13px;">
+          <svg class="svg-ic"><use href="#ic-play"/></svg> Create New World
+        </button>
+        <button class="btn danger" id="btn-cancel-create">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 4. CRAFTING, COOKING & INVENTORY ==================== -->
+  <div id="page-inventory" class="ui-page dirt-bg hidden">
+    <div class="ui-card">
+      <div class="card-header">
+        <span class="card-title"><svg class="svg-ic"><use href="#ic-pack"/></svg> CRAFTING & INVENTORY</span>
+        <button class="btn-close" id="btn-inv-close"><svg class="svg-ic sm"><use href="#ic-close"/></svg></button>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; background:#1b1d24; padding:5px 9px; border:1px solid #383b47;">
+        <span style="font-size:10.5px; font-weight:800;">Armor: <strong id="lbl-armor-tier" style="color:#4ff3ff;">None (0%)</strong></span>
+        <button class="btn" id="btn-equip-armor" style="padding:4px 9px; font-size:10px;">Equip Armor</button>
+      </div>
+      <div class="inv-layout">
+        <div>
+          <div style="font-size:10px; color:var(--mc-green-light); font-weight:900; margin-bottom:4px;">CRAFTING & SMELTING</div>
+          <div class="slot-grid" id="craft-grid"></div>
+        </div>
+        <div>
+          <div style="font-size:10px; color:var(--mc-gold); font-weight:900; margin-bottom:4px;">INVENTORY (TAP TO EQUIP)</div>
+          <div class="slot-grid" id="item-grid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 5. OPTIONS / SETTINGS SCREEN ==================== -->
+  <div id="page-settings" class="ui-page dirt-bg hidden">
+    <div class="ui-card" style="width:min(92vw, 380px);">
+      <div class="card-header">
+        <span class="card-title"><svg class="svg-ic"><use href="#ic-settings"/></svg> OPTIONS & AUDIO</span>
+        <button class="btn-close" id="btn-settings-close"><svg class="svg-ic sm"><use href="#ic-close"/></svg></button>
+      </div>
+      <div class="settings-body">
+        <div class="setting-item">
+          <span>Background Music Volume</span>
+          <input type="range" id="rng-music" min="0" max="100" step="5" value="80" />
+        </div>
+        <div class="setting-item">
+          <span>Sound Effects Volume</span>
+          <input type="range" id="rng-vol" min="0" max="100" step="5" value="95" />
+        </div>
+        <div class="setting-item">
+          <span>Look Sensitivity</span>
+          <input type="range" id="rng-sens" min="40" max="200" step="10" value="100" />
+        </div>
+        <div class="setting-item">
+          <span>Fog Distance (Edge Blend)</span>
+          <input type="range" id="rng-fog" min="20" max="36" step="2" value="26" />
+        </div>
+        <div class="setting-item">
+          <span>Field of View (FOV)</span>
+          <input type="range" id="rng-fov" min="60" max="100" step="2" value="72" />
+        </div>
+        <div class="setting-item">
+          <span>Resolution Scale (Crispness)</span>
+          <input type="range" id="rng-res" min="80" max="160" step="20" value="120" />
+        </div>
+      </div>
+      <button class="btn primary" id="btn-settings-done">Done</button>
+    </div>
+  </div>
+
+  <!-- ==================== 6. PAUSE GAME MENU ==================== -->
+  <div id="page-pause" class="ui-page dirt-bg hidden">
+    <div class="ui-card" style="width:min(84vw, 280px);">
+      <div class="card-header">
+        <span class="card-title"><svg class="svg-ic"><use href="#ic-pause"/></svg> GAME MENU</span>
+        <button class="btn-close" id="btn-pause-close"><svg class="svg-ic sm"><use href="#ic-close"/></svg></button>
+      </div>
+      <button class="btn primary" id="btn-resume"><svg class="svg-ic"><use href="#ic-play"/></svg> Back to Game</button>
+      <button class="btn" id="btn-pause-fly"><svg class="svg-ic"><use href="#ic-sprint"/></svg> Fly Mode: OFF</button>
+      <button class="btn" id="btn-pause-settings"><svg class="svg-ic"><use href="#ic-settings"/></svg> Options & Audio</button>
+      <button class="btn" id="btn-pause-about"><svg class="svg-ic"><use href="#ic-info"/></svg> About Studio</button>
+      <button class="btn" id="btn-pause-save"><svg class="svg-ic"><use href="#ic-save"/></svg> Save World</button>
+      <button class="btn danger" id="btn-pause-title">Save & Quit to Title</button>
+    </div>
+  </div>
+
+  <!-- ==================== 7. YOU DIED SCREEN ==================== -->
+  <div id="page-death" class="ui-page hidden" style="background:rgba(105,12,12,0.88);">
+    <div class="title-hub">
+      <div style="font-size:28px; font-weight:900; text-shadow:3px 3px 0 #000;">YOU DIED!</div>
+      <button class="btn primary" id="btn-respawn" style="width:100%;">
+        <svg class="svg-ic"><use href="#ic-play"/></svg> Respawn
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== IN-GAME HUD ==================== -->
+  <div id="hud-layer" class="hidden">
+    <div id="crosshair"></div>
+    <div id="mining-ring"><div id="mining-fill"></div></div>
+    <div id="hud-telemetry">XYZ: 0, 10, 0 | DAY | 60 FPS</div>
+
+    <div id="look-zone"></div>
+
+    <!-- Working Top-Right Bar (z-index 50 - Above Look-Zone) -->
+    <div id="mc-top-bar">
+      <button class="top-bar-btn" id="top-btn-bag" type="button">
+        <svg class="svg-ic"><use href="#ic-pack"/></svg> Bag
+      </button>
+      <button class="top-bar-btn" id="top-btn-cam" type="button">
+        <svg class="svg-ic"><use href="#ic-cam"/></svg> View
+      </button>
+      <button class="top-bar-btn" id="top-btn-pause" type="button">
+        <svg class="svg-ic"><use href="#ic-pause"/></svg> Menu
+      </button>
+    </div>
+
+    <div id="joystick-zone">
+      <div id="joystick-knob"></div>
+    </div>
+    <div id="action-cluster">
+      <button class="act-btn" id="act-mine" type="button" title="Mine"><svg class="svg-ic lg"><use href="#ic-pickaxe"/></svg></button>
+      <button class="act-btn" id="act-place" type="button" title="Place"><svg class="svg-ic lg"><use href="#ic-block"/></svg></button>
+      <button class="act-btn" id="act-hit" type="button" title="Attack / Eat"><svg class="svg-ic lg"><use href="#ic-sword"/></svg></button>
+      <button class="act-btn" id="act-jump" type="button" title="Jump / Swim"><svg class="svg-ic lg"><use href="#ic-jump"/></svg></button>
+      <button class="act-btn" id="act-sprint" type="button" title="Sprint" style="grid-column: span 2; width: 85px; height: 26px;">
+        <svg class="svg-ic sm"><use href="#ic-sprint"/></svg>
+      </button>
+    </div>
+
+    <div id="bottom-dock">
+      <div id="fade-item-label">Wooden Pickaxe</div>
+      <div class="vitals-row">
+        <div class="vital-group" id="armor-bar"></div>
+        <div class="vital-group" id="oxygen-bar"></div>
+      </div>
+      <div class="vitals-row">
+        <div class="vital-group" id="hearts-bar"></div>
+        <div class="vital-group" id="hunger-bar"></div>
+      </div>
+      <div id="xp-lvl-badge">LVL 1</div>
+      <div id="xp-wrap"><div id="xp-fill"></div></div>
+      <div id="hotbar-wrap">
+        <div id="hotbar"></div>
+        <button id="hotbar-bag-btn" type="button" title="Open Crafting & Inventory">
+          <svg class="svg-ic"><use href="#ic-pack"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Three.js r128 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    // =========================================================================
+    // 1. WORLD & GRAPHICS CONFIGURATION
+    // =========================================================================
+    const Config = {
+      worldName: "Arjun's Overworld",
+      difficulty: 'NORMAL',
+      biomePreset: 'OVERWORLD',
+      bonusChest: true,
+      renderDist: 2,
+      fogFar: 26,
+      fov: 72,
+      sens: 1.0,
+      volume: 0.95,
+      musicVolume: 0.80
+    };
+
+    // =========================================================================
+    // 2. NATURAL ACOUSTIC SOUND EFFECTS & GENERATIVE C418 AMBIENT MUSIC ENGINE
+    // =========================================================================
+    const AudioEngine = (() => {
+      let ctx = null;
+      let noiseBuf = null;
+      let reverbNode = null;
+      let windGain = null;
+      let musicTimer = null;
+
+      // Soothing C418-inspired Minecraft Overworld Piano & Warm Pad Progressions
+      const CHORDS = [
+        [130.81, 196.00, 246.94, 293.66, 329.63], // Cmaj9
+        [110.00, 164.81, 220.00, 261.63, 329.63], // Am7
+        [87.31,  130.81, 174.61, 220.00, 261.63], // Fmaj7
+        [98.00,  146.83, 196.00, 246.94, 293.66]  // G6
+      ];
+      const MELODY = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25];
+      let chordIdx = 0;
+
+      function init() {
+        if (!ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return;
+          ctx = new AC();
+          const sr = ctx.sampleRate;
+
+          // White noise buffer for organic earth, foliage, timber, mineral, and waterfall textures
+          noiseBuf = ctx.createBuffer(1, sr * 2.0, sr);
+          const d = noiseBuf.getChannelData(0);
+          for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+
+          // Warm stereo acoustic reverb impulse response for C418-style piano & monolith echoes
+          const revBuf = ctx.createBuffer(2, sr * 2.4, sr);
+          for (let ch = 0; ch < 2; ch++) {
+            const rd = revBuf.getChannelData(ch);
+            for (let i = 0; i < rd.length; i++) {
+              rd[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / rd.length, 2.6);
+            }
+          }
+          reverbNode = ctx.createConvolver();
+          reverbNode.buffer = revBuf;
+          const revGain = ctx.createGain();
+          revGain.gain.value = 0.36;
+          reverbNode.connect(revGain);
+          revGain.connect(ctx.destination);
+
+          startNaturalBreezeAndWaterfallAmbience();
+          startGenerativeMusic();
+        }
+        if (ctx && ctx.state === 'suspended') ctx.resume();
+      }
+
+      function startNaturalBreezeAndWaterfallAmbience() {
+        if (!ctx || !noiseBuf) return;
+        const src = ctx.createBufferSource();
+        src.buffer = noiseBuf;
+        src.loop = true;
+        const flt = ctx.createBiquadFilter();
+        flt.type = 'lowpass';
+        flt.frequency.value = 310;
+        windGain = ctx.createGain();
+        windGain.gain.value = 0.015 * Config.volume;
+        src.connect(flt);
+        flt.connect(windGain);
+        windGain.connect(ctx.destination);
+        src.start();
+      }
+
+      function playPianoNote(freq, dur, vol, delaySec = 0) {
+        if (!ctx || Config.musicVolume <= 0.01) return;
+        const t = ctx.currentTime + delaySec;
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        osc1.type = 'triangle';
+        osc2.type = 'sine';
+        osc1.frequency.setValueAtTime(freq, t);
+        osc2.frequency.setValueAtTime(freq * 2, t);
+
+        const lp = ctx.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.setValueAtTime(freq * 3.4, t);
+        lp.frequency.exponentialRampToValueAtTime(freq * 1.1, t + dur);
+
+        const g = ctx.createGain();
+        const peak = vol * Config.musicVolume * 0.13;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.linearRampToValueAtTime(peak, t + 0.06);
+        g.gain.exponentialRampToValueAtTime(0.0004, t + dur);
+
+        const harmGain = ctx.createGain();
+        harmGain.gain.value = 0.18;
+
+        osc1.connect(lp);
+        osc2.connect(harmGain);
+        harmGain.connect(lp);
+        lp.connect(g);
+        g.connect(ctx.destination);
+        if (reverbNode) g.connect(reverbNode);
+
+        osc1.start(t); osc2.start(t);
+        osc1.stop(t + dur + 0.05); osc2.stop(t + dur + 0.05);
+      }
+
+      function startGenerativeMusic() {
+        if (musicTimer) clearInterval(musicTimer);
+        // Play an immediate opening ambient chord
+        const firstChord = CHORDS[0];
+        firstChord.forEach((f, idx) => playPianoNote(f, 4.5, 0.55, idx * 0.28));
+
+        musicTimer = setInterval(() => {
+          if (!ctx || Config.musicVolume <= 0.01) return;
+          const chord = CHORDS[chordIdx];
+          chordIdx = (chordIdx + 1) % CHORDS.length;
+          chord.forEach((f, idx) => playPianoNote(f, 4.4, 0.52, idx * 0.34));
+          const notesCount = 2 + (Math.random() * 2 | 0);
+          for (let i = 0; i < notesCount; i++) {
+            const mf = MELODY[Math.floor(Math.random() * MELODY.length)];
+            playPianoNote(mf, 2.6, 0.68, 1.1 + i * 0.95 + Math.random() * 0.25);
+          }
+        }, 4800);
+      }
+
+      function noiseBurst(freq, q, dur, vol, delay = 0, type = 'bandpass') {
+        if (!ctx || !noiseBuf || Config.volume <= 0.01) return;
+        const t = ctx.currentTime + delay;
+        const src = ctx.createBufferSource();
+        src.buffer = noiseBuf;
+        const flt = ctx.createBiquadFilter();
+        flt.type = type;
+        flt.frequency.setValueAtTime(freq, t);
+        flt.Q.value = q;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.001, t);
+        g.gain.linearRampToValueAtTime(vol * Config.volume, t + 0.005);
+        g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+        src.connect(flt);
+        flt.connect(g);
+        g.connect(ctx.destination);
+        src.start(t, Math.random() * 0.8);
+        src.stop(t + dur + 0.01);
+      }
+
+      function tonePulse(fStart, fEnd, dur, vol, delay = 0, wave = 'triangle') {
+        if (!ctx || Config.volume <= 0.01) return;
+        const t = ctx.currentTime + delay;
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = wave;
+        osc.frequency.setValueAtTime(fStart, t);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(20, fEnd), t + dur);
+        g.gain.setValueAtTime(vol * Config.volume, t);
+        g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+        osc.connect(g);
+        g.connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + dur + 0.01);
+      }
+
+      return {
+        init,
+        playChordSwell() {
+          init();
+          [261.63, 329.63, 392.00, 523.25].forEach((f, i) => playPianoNote(f, 3.2, 0.85, i * 0.14));
+        },
+        // 1. NATURAL WALKING
+        playWalk(surface = 'grass') {
+          init();
+          const j = (Math.random() - 0.5) * 30;
+          if (surface === 'water') {
+            noiseBurst(520 + j, 1.3, 0.13, 0.15, 0, 'bandpass');
+            noiseBurst(1100, 2.0, 0.08, 0.09, 0.03, 'bandpass');
+          } else if (surface === 'stone') {
+            tonePulse(165 + j, 70, 0.04, 0.09, 0, 'triangle');
+            noiseBurst(1550 + j * 2, 3.0, 0.035, 0.1, 0);
+          } else if (surface === 'wood') {
+            tonePulse(200 + j, 90, 0.05, 0.12, 0, 'triangle');
+            noiseBurst(700, 2.5, 0.04, 0.08, 0);
+          } else {
+            tonePulse(115 + j, 48, 0.045, 0.08, 0, 'sine');
+            noiseBurst(1050 + j * 2, 1.7, 0.05, 0.11, 0);
+            noiseBurst(1400, 2.1, 0.04, 0.07, 0.02);
+          }
+        },
+        // 2. NATURAL WOOD CUTTING
+        playWoodCut(isBreak = false) {
+          init();
+          const j = (Math.random() - 0.5) * 25;
+          if (!isBreak) {
+            tonePulse(245 + j, 98, 0.075, 0.22, 0, 'triangle');
+            tonePulse(490 + j, 220, 0.045, 0.11, 0.004, 'sine');
+            noiseBurst(760 + j * 2, 2.6, 0.055, 0.15, 0.008);
+          } else {
+            tonePulse(220, 45, 0.16, 0.3, 0, 'triangle');
+            noiseBurst(640, 1.5, 0.14, 0.26, 0);
+            noiseBurst(980, 2.1, 0.11, 0.2, 0.04);
+            tonePulse(160, 55, 0.12, 0.18, 0.055, 'sine');
+          }
+        },
+        // 3. NATURAL STONE CUTTING
+        playStoneCut(isBreak = false) {
+          init();
+          const j = (Math.random() - 0.5) * 45;
+          if (!isBreak) {
+            tonePulse(175 + j, 58, 0.06, 0.16, 0, 'triangle');
+            tonePulse(1780 + j * 3, 680, 0.035, 0.09, 0, 'sine');
+            noiseBurst(2100 + j * 2, 2.8, 0.05, 0.17, 0);
+          } else {
+            tonePulse(190, 38, 0.16, 0.28, 0, 'triangle');
+            noiseBurst(1420, 1.2, 0.15, 0.26, 0);
+            noiseBurst(1920, 2.0, 0.11, 0.2, 0.035);
+            noiseBurst(980, 1.5, 0.12, 0.18, 0.07);
+          }
+        },
+        // 4. NATURAL CRAFTING SOUND
+        playCraft() {
+          init();
+          tonePulse(280, 120, 0.055, 0.22, 0, 'triangle');
+          noiseBurst(900, 2.2, 0.04, 0.14, 0);
+          tonePulse(350, 160, 0.055, 0.22, 0.075, 'triangle');
+          noiseBurst(1250, 2.5, 0.045, 0.15, 0.075);
+          tonePulse(587.33, 880, 0.11, 0.18, 0.15, 'sine');
+        },
+        uiClick() { init(); tonePulse(480, 290, 0.03, 0.08); },
+        pickupPop() { init(); tonePulse(450, 880, 0.06, 0.15, 0, 'sine'); },
+        eatCrunch() {
+          init();
+          noiseBurst(700, 1.4, 0.07, 0.18, 0);
+          noiseBurst(940, 1.6, 0.07, 0.16, 0.08);
+        },
+        attackSwing(hit = false) {
+          init();
+          noiseBurst(780, 1.4, 0.08, 0.16);
+          if (hit) tonePulse(150, 40, 0.12, 0.26, 0.01);
+        },
+        hurt() {
+          init();
+          tonePulse(120, 32, 0.2, 0.32, 0, 'sawtooth');
+          noiseBurst(750, 1.4, 0.09, 0.24);
+        },
+        explode() {
+          init();
+          tonePulse(95, 20, 0.5, 0.4, 0, 'sawtooth');
+          noiseBurst(200, 0.6, 0.55, 0.45, 0, 'lowpass');
+        }
+      };
+    })();
+
+    // Attempt immediate audio initialization & also bind to any first interaction on the document
+    AudioEngine.init();
+    window.addEventListener('pointerdown', () => AudioEngine.init(), { once: true });
+    window.addEventListener('keydown', () => AudioEngine.init(), { once: true });
+
+    // =========================================================================
+    // 3. GLITCH-FREE 32x32 SHADED MINECRAFT TEXTURES & BLOCK CRACK OVERLAYS
+    // =========================================================================
+    function makeTex(drawFn, addAO = true) {
+      const c = document.createElement('canvas');
+      c.width = 32; c.height = 32;
+      const ctx = c.getContext('2d');
+      drawFn(ctx);
+      if (addAO) {
+        const grad = ctx.createLinearGradient(0, 0, 32, 32);
+        grad.addColorStop(0, 'rgba(255,255,255,0.06)');
+        grad.addColorStop(0.5, 'rgba(0,0,0,0)');
+        grad.addColorStop(1, 'rgba(0,0,0,0.12)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 32, 32);
+
+        ctx.fillStyle = 'rgba(255,255,255,0.1)';
+        ctx.fillRect(0, 0, 32, 1); ctx.fillRect(0, 0, 1, 32);
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillRect(0, 31, 32, 1); ctx.fillRect(31, 0, 1, 32);
+      }
+      const t = new THREE.CanvasTexture(c);
+      t.magFilter = THREE.NearestFilter;
+      t.minFilter = THREE.NearestFilter;
+      t.generateMipmaps = false;
+      return { canvas: c, tex: t };
+    }
+
+    function fillNoise(ctx, hex, v = 16) {
+      const r0 = parseInt(hex.slice(1,3),16), g0 = parseInt(hex.slice(3,5),16), b0 = parseInt(hex.slice(5,7),16);
+      for (let y=0; y<32; y++) for (let x=0; x<32; x++) {
+        const d = ((Math.random() - 0.5) * v * 2) | 0;
+        ctx.fillStyle = `rgb(${Math.min(255,Math.max(0,r0+d))},${Math.min(255,Math.max(0,g0+d))},${Math.min(255,Math.max(0,b0+d))})`;
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
+
+    function fastMat(pair, opts = {}) {
+      return new THREE.MeshLambertMaterial({
+        map: pair.tex,
+        transparent: !!opts.transparent,
+        alphaTest: opts.alphaTest || 0,
+        depthWrite: opts.depthWrite ?? true,
+        side: opts.doubleSide ? THREE.DoubleSide : THREE.FrontSide,
+        opacity: opts.opacity ?? 1,
+        emissive: new THREE.Color(opts.emissive || 0x000000),
+        emissiveIntensity: opts.emissiveInt || 0
+      });
+    }
+
+    const CrackMats = Array.from({ length: 8 }, (_, stage) => {
+      const pair = makeTex(ctx => {
+        ctx.clearRect(0, 0, 32, 32);
+        ctx.strokeStyle = 'rgba(15, 15, 15, 0.78)';
+        ctx.lineWidth = 2;
+        const branches = 3 + stage * 2;
+        for (let b = 0; b < branches; b++) {
+          ctx.beginPath();
+          ctx.moveTo(16, 16);
+          const ang = (b / branches) * Math.PI * 2 + stage * 0.3;
+          const len = 4 + stage * 2;
+          ctx.lineTo(16 + Math.cos(ang) * len, 16 + Math.sin(ang) * len);
+          ctx.stroke();
+        }
+      }, false);
+      return new THREE.MeshBasicMaterial({
+        map: pair.tex,
+        transparent: true,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2
+      });
+    });
+
+    function drawOre(ctx, hex) {
+      fillNoise(ctx, '#737373', 16);
+      [[5,5],[9,6],[20,7],[22,10],[12,16],[15,17],[7,22],[23,23]].forEach(([x,y]) => {
+        ctx.fillStyle = '#2e2e2e'; ctx.fillRect(x, y+3, 4, 2);
+        ctx.fillStyle = hex; ctx.fillRect(x, y, 4, 3);
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, 2, 1);
+      });
+    }
+
+    function drawToolIcon(hex, sword = false) {
+      return makeTex(ctx => {
+        ctx.clearRect(0,0,32,32);
+        ctx.fillStyle = '#6e421c';
+        for (let i=4; i<25; i++) {
+          ctx.fillRect(i, 30-i, 3, 3);
+          ctx.fillStyle = i % 2 === 0 ? '#875327' : '#593414';
+        }
+        ctx.fillStyle = hex;
+        if (sword) {
+          for (let i=10; i<28; i++) {
+            ctx.fillStyle = hex; ctx.fillRect(i, 30-i, 4, 4);
+            ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.fillRect(i, 30-i, 1, 1);
+          }
+          ctx.fillStyle = '#d4af37'; ctx.fillRect(8,18,8,3);
+        } else {
+          ctx.fillRect(16,4,10,4); ctx.fillRect(24,6,4,10);
+          ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fillRect(16,4,10,1);
+        }
+      }, false).canvas;
+    }
+
+    function drawArmorIcon(hex) {
+      return makeTex(ctx => {
+        ctx.clearRect(0,0,32,32);
+        ctx.fillStyle = hex;
+        ctx.fillRect(5, 5, 22, 10);
+        ctx.fillRect(9, 15, 14, 13);
+        ctx.fillStyle = 'rgba(255,255,255,0.35)';
+        ctx.fillRect(7, 7, 4, 18);
+        ctx.clearRect(12, 5, 8, 5);
+      }, false).canvas;
+    }
+
+    const TexAssets = {
+      grassTop: makeTex(ctx => {
+        fillNoise(ctx, '#4e962b', 16);
+        for (let i=0; i<70; i++) {
+          ctx.fillStyle = i % 2 === 0 ? '#62b339' : '#3d7a1f';
+          ctx.fillRect((Math.random()*30)|0, (Math.random()*30)|0, 1, 2);
+        }
+      }),
+      dirt: makeTex(ctx => {
+        fillNoise(ctx, '#785337', 18);
+        for (let i=0; i<25; i++) {
+          ctx.fillStyle = i % 3 === 0 ? '#966b49' : '#523722';
+          ctx.fillRect((Math.random()*29)|0, (Math.random()*29)|0, 2, 2);
+        }
+      }),
+      grassSide: makeTex(ctx => {
+        fillNoise(ctx, '#785337', 18);
+        for (let x=0; x<32; x++) {
+          const h = 5 + ((Math.sin(x*0.5)*2 + Math.random()*4)|0);
+          ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(x, h, 1, 2);
+          for (let y=0; y<h; y++) {
+            ctx.fillStyle = y===h-1 ? '#38701b' : (y < 2 ? '#5cad34' : '#4b9128');
+            ctx.fillRect(x,y,1,1);
+          }
+        }
+      }),
+      chiseledStone: makeTex(ctx => {
+        fillNoise(ctx, '#787878', 12);
+        ctx.strokeStyle = '#383838'; ctx.lineWidth = 2;
+        ctx.strokeRect(2, 2, 28, 28);
+        ctx.strokeRect(7, 7, 18, 18);
+        ctx.strokeStyle = '#a6a6a6'; ctx.lineWidth = 1;
+        ctx.strokeRect(4, 4, 24, 24);
+        ctx.fillStyle = '#424242'; ctx.fillRect(12, 12, 8, 8);
+      }),
+      obsidian: makeTex(ctx => {
+        fillNoise(ctx, '#1b1429', 16);
+        for (let i=0; i<24; i++) {
+          ctx.fillStyle = i % 2 === 0 ? '#3b2854' : '#0d0814';
+          ctx.fillRect((Math.random()*28)|0, (Math.random()*28)|0, 3, 2);
+        }
+      }),
+      mossyCobble: makeTex(ctx => {
+        fillNoise(ctx, '#686868', 22);
+        ctx.fillStyle = '#2b2b2b';
+        for (let y=0; y<32; y+=8) {
+          ctx.fillRect(0,y,32,2);
+          for (let x=(y%16?8:0); x<32; x+=16) ctx.fillRect(x,y,2,8);
+        }
+        ctx.fillStyle = '#488c28';
+        [[4,4,8,4],[16,12,10,5],[6,20,12,4],[20,24,8,5]].forEach(([x,y,w,h]) => ctx.fillRect(x,y,w,h));
+      }),
+      goldBlock: makeTex(ctx => {
+        fillNoise(ctx, '#f5c22b', 14);
+        ctx.strokeStyle = '#fff099'; ctx.lineWidth = 2; ctx.strokeRect(2, 2, 28, 28);
+        ctx.strokeStyle = '#b88214'; ctx.lineWidth = 2; ctx.strokeRect(5, 5, 22, 22);
+      }),
+      snowTop: makeTex(ctx => fillNoise(ctx, '#f2f7ff', 10)),
+      snowSide: makeTex(ctx => {
+        fillNoise(ctx, '#767676', 14);
+        for (let x=0; x<32; x++) {
+          const h = 6 + ((Math.cos(x*0.4)*2 + Math.random()*3)|0);
+          ctx.fillStyle = 'rgba(0,0,0,0.28)'; ctx.fillRect(x, h, 1, 2);
+          for (let y=0; y<h; y++) { ctx.fillStyle = '#f2f7ff'; ctx.fillRect(x,y,1,1); }
+        }
+      }),
+      stone: makeTex(ctx => {
+        fillNoise(ctx, '#757575', 15);
+        for (let y=3; y<30; y+=5) {
+          const sx = (y * 7) % 20;
+          ctx.fillStyle = '#525252'; ctx.fillRect(sx, y, 9, 1);
+          ctx.fillStyle = '#8f8f8f'; ctx.fillRect(sx, y+1, 9, 1);
+        }
+      }),
+      cobble: makeTex(ctx => {
+        fillNoise(ctx, '#686868', 24);
+        ctx.fillStyle = '#2b2b2b';
+        for (let y=0; y<32; y+=8) {
+          ctx.fillRect(0,y,32,2);
+          for (let x=(y%16?8:0); x<32; x+=16) {
+            ctx.fillRect(x,y,2,8);
+            ctx.fillStyle = '#8c8c8c'; ctx.fillRect(x+3, y+2, 6, 2);
+            ctx.fillStyle = '#2b2b2b';
+          }
+        }
+      }),
+      bedrock: makeTex(ctx => fillNoise(ctx, '#222222', 30)),
+      logSide: makeTex(ctx => {
+        fillNoise(ctx, '#593d22', 14);
+        for (let x=0; x<32; x+=4) {
+          ctx.fillStyle = x%8===0 ? '#362311' : '#6e4d2c';
+          ctx.fillRect(x,0,2,32);
+        }
+      }),
+      logTop: makeTex(ctx => {
+        fillNoise(ctx, '#b38b54', 10);
+        ctx.strokeStyle = '#4a321a'; ctx.lineWidth = 4; ctx.strokeRect(2,2,28,28);
+        ctx.strokeStyle = '#8c693a'; ctx.lineWidth = 2; ctx.strokeRect(8,8,16,16);
+      }),
+      planks: makeTex(ctx => {
+        fillNoise(ctx, '#ad854e', 12);
+        ctx.fillStyle = '#5c4120';
+        for (let y=7; y<32; y+=8) {
+          ctx.fillRect(0,y,32,2);
+          ctx.fillRect((y*5)%26+2,y-7,2,7);
+        }
+      }),
+      leaves: makeTex(ctx => {
+        fillNoise(ctx, '#2b6918', 24);
+        for (let i=0; i<45; i++) {
+          ctx.fillStyle = i % 3 === 0 ? '#429127' : '#16380b';
+          ctx.fillRect((Math.random()*29)|0, (Math.random()*29)|0, 3, 2);
+        }
+      }),
+      vines: makeTex(ctx => {
+        ctx.clearRect(0, 0, 32, 32);
+        [3, 8, 14, 19, 25, 29].forEach((cx, idx) => {
+          const maxH = 18 + ((idx * 7) % 14);
+          for (let y = 0; y < maxH; y++) {
+            const sway = Math.sin(y * 0.35 + idx) * 1.5 | 0;
+            ctx.fillStyle = (y % 4 === 0) ? '#235914' : '#3a8522';
+            ctx.fillRect(cx + sway, y, 2, 2);
+            if (y % 5 === 0) { ctx.fillStyle = '#52b532'; ctx.fillRect(cx + sway - 1, y, 4, 2); }
+          }
+        });
+      }, false),
+      tallGrass: makeTex(ctx => {
+        ctx.clearRect(0, 0, 32, 32);
+        for (let x = 2; x < 30; x += 2) {
+          const h = 10 + ((Math.sin(x * 1.7) + 1) * 9 | 0);
+          for (let y = 31; y >= 32 - h; y--) {
+            const bend = ((31 - y) * 0.15 * (x % 4 === 0 ? 1 : -1)) | 0;
+            ctx.fillStyle = y < 32 - h + 4 ? '#68bd3a' : (x % 4 === 0 ? '#3b781c' : '#4e9628');
+            ctx.fillRect(x + bend, y, 2, 1);
+          }
+        }
+      }, false),
+      poppyFlower: makeTex(ctx => {
+        ctx.clearRect(0, 0, 32, 32);
+        for (let x = 4; x < 28; x += 3) { ctx.fillStyle = '#3b781c'; ctx.fillRect(x, 24, 2, 8); }
+        ctx.fillStyle = '#2d6616'; ctx.fillRect(15, 13, 2, 19);
+        ctx.fillStyle = '#b81d1d'; ctx.fillRect(9, 6, 14, 9);
+        ctx.fillStyle = '#ff3838'; ctx.fillRect(11, 5, 10, 6);
+        ctx.fillStyle = '#ffcf40'; ctx.fillRect(15, 9, 2, 2);
+      }, false),
+      sand: makeTex(ctx => fillNoise(ctx, '#e0d3a2', 12)),
+      cactus: makeTex(ctx => {
+        fillNoise(ctx, '#2b7a24', 12);
+        ctx.fillStyle = '#143d10';
+        for (let x=4; x<32; x+=8) ctx.fillRect(x,0,2,32);
+      }),
+      coal: makeTex(ctx => drawOre(ctx, '#1b1b1b')),
+      iron: makeTex(ctx => drawOre(ctx, '#e0b79b')),
+      gold: makeTex(ctx => drawOre(ctx, '#ffef42')),
+      diamond: makeTex(ctx => drawOre(ctx, '#4ff3ff')),
+      torch: makeTex(ctx => { fillNoise(ctx, '#e09f26', 20); ctx.fillStyle = '#ffffaa'; ctx.fillRect(6,6,20,20); }),
+      campfire: makeTex(ctx => {
+        fillNoise(ctx, '#4a321a', 14);
+        ctx.fillStyle = '#ff6600'; ctx.fillRect(6, 6, 20, 20);
+        ctx.fillStyle = '#ffcc22'; ctx.fillRect(10, 10, 12, 12);
+      }),
+      brick: makeTex(ctx => {
+        fillNoise(ctx, '#993e2e', 14);
+        ctx.fillStyle = '#bfb2a8';
+        for (let y=6; y<32; y+=8) { ctx.fillRect(0,y,32,2); for (let x=((y+2)%16?8:0); x<32; x+=16) ctx.fillRect(x,y-6,2,6); }
+      }),
+      glass: makeTex(ctx => {
+        ctx.clearRect(0,0,32,32); ctx.fillStyle = 'rgba(205,245,255,0.25)'; ctx.fillRect(0,0,32,32);
+        ctx.strokeStyle = '#e6f9ff'; ctx.lineWidth = 3; ctx.strokeRect(1,1,30,30);
+      }, false),
+      tnt: makeTex(ctx => {
+        fillNoise(ctx, '#cc2929', 12); ctx.fillStyle = '#f0f0f0'; ctx.fillRect(0,10,32,12); ctx.fillStyle = '#111'; ctx.fillRect(6,12,20,8);
+      }),
+      water: makeTex(ctx => {
+        fillNoise(ctx, '#1c63e6', 10);
+        ctx.fillStyle = 'rgba(160, 225, 255, 0.35)';
+        ctx.fillRect(3, 5, 11, 2); ctx.fillRect(16, 13, 12, 2); ctx.fillRect(6, 23, 14, 2);
+      }, false),
+      bedTop: makeTex(ctx => { fillNoise(ctx, '#c92a2a', 10); ctx.fillStyle = '#f5f5f5'; ctx.fillRect(2, 2, 28, 9); }),
+      bedSide: makeTex(ctx => { fillNoise(ctx, '#ad854e', 10); ctx.fillStyle = '#c92a2a'; ctx.fillRect(0, 0, 32, 16); }),
+      chestSide: makeTex(ctx => {
+        fillNoise(ctx, '#9c6932', 12);
+        ctx.strokeStyle = '#38240f'; ctx.lineWidth = 3; ctx.strokeRect(1, 1, 30, 30);
+        ctx.fillStyle = '#2b1b0b'; ctx.fillRect(0, 10, 32, 3);
+        ctx.fillStyle = '#f5c542'; ctx.fillRect(13, 8, 6, 7);
+      }),
+      wool: makeTex(ctx => fillNoise(ctx, '#f2f2f5', 14)),
+      rawMeat: makeTex(ctx => {
+        ctx.clearRect(0,0,32,32);
+        ctx.fillStyle = '#7a1f28'; ctx.fillRect(4, 9, 24, 16);
+        ctx.fillStyle = '#e05360'; ctx.fillRect(6, 7, 20, 16);
+        ctx.fillStyle = '#ffd6da';
+        ctx.fillRect(8, 9, 8, 3); ctx.fillRect(14, 13, 7, 2);
+        ctx.fillStyle = '#fff5f5'; ctx.fillRect(19, 10, 4, 5);
+      }, false),
+      cookedSteak: makeTex(ctx => {
+        ctx.clearRect(0,0,32,32);
+        ctx.fillStyle = '#421a0c'; ctx.fillRect(4, 9, 24, 16);
+        ctx.fillStyle = '#8c3b20'; ctx.fillRect(6, 7, 20, 16);
+        ctx.fillStyle = '#521e0d';
+        for (let x=8; x<=20; x+=4) ctx.fillRect(x, 8, 2, 13);
+        ctx.fillStyle = '#f0cfa8'; ctx.fillRect(18, 10, 4, 5);
+      }, false),
+      apple: makeTex(ctx => {
+        ctx.clearRect(0,0,32,32);
+        ctx.fillStyle = '#5c3c1e'; ctx.fillRect(15, 2, 2, 6);
+        ctx.fillStyle = '#47b833'; ctx.fillRect(17, 3, 6, 4);
+        ctx.fillStyle = '#9e1515'; ctx.fillRect(6, 8, 20, 19);
+        ctx.fillStyle = '#e32626'; ctx.fillRect(7, 7, 18, 18);
+        ctx.fillStyle = '#ff9494'; ctx.fillRect(10, 9, 5, 6);
+      }, false),
+      goldenApple: makeTex(ctx => {
+        ctx.clearRect(0,0,32,32);
+        ctx.fillStyle = '#5c3c1e'; ctx.fillRect(15, 2, 2, 6);
+        ctx.fillStyle = '#b8860b'; ctx.fillRect(6, 8, 20, 19);
+        ctx.fillStyle = '#ffd700'; ctx.fillRect(7, 7, 18, 18);
+        ctx.fillStyle = '#ffffaa'; ctx.fillRect(10, 9, 6, 6);
+      }, false),
+      berries: makeTex(ctx => {
+        ctx.clearRect(0,0,32,32);
+        ctx.fillStyle = '#286618'; ctx.fillRect(7, 4, 18, 11);
+        [[7,13],[16,12],[11,18],[18,19]].forEach(([bx,by]) => {
+          ctx.fillStyle = '#991124'; ctx.fillRect(bx, by, 8, 8);
+          ctx.fillStyle = '#eb2842'; ctx.fillRect(bx+1, by+1, 6, 6);
+          ctx.fillStyle = '#ff9eab'; ctx.fillRect(bx+2, by+2, 2, 2);
+        });
+      }, false),
+      leather: makeTex(ctx => {
+        ctx.clearRect(0,0,32,32);
+        ctx.fillStyle = '#783c1c'; ctx.fillRect(5, 5, 22, 22);
+        ctx.fillStyle = '#ad5c32'; ctx.fillRect(7, 7, 18, 18);
+      }, false),
+      gunpowder: makeTex(ctx => {
+        ctx.clearRect(0,0,32,32);
+        ctx.fillStyle = '#3b3b3b'; ctx.fillRect(6, 9, 20, 16);
+        ctx.fillStyle = '#6e6e6e'; ctx.fillRect(9, 7, 14, 14);
+      }, false),
+      playerFace: makeTex(ctx => {
+        fillNoise(ctx, '#dba276', 10);
+        ctx.fillStyle = '#3b2514';
+        ctx.fillRect(0, 0, 32, 9); ctx.fillRect(0, 9, 4, 6); ctx.fillRect(28, 9, 4, 6);
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(5, 13, 7, 4); ctx.fillRect(20, 13, 7, 4);
+        ctx.fillStyle = '#3254a8'; ctx.fillRect(8, 13, 4, 4); ctx.fillRect(20, 13, 4, 4);
+        ctx.fillStyle = '#b87d56'; ctx.fillRect(14, 16, 4, 4);
+        ctx.fillStyle = '#8f5538'; ctx.fillRect(11, 23, 10, 3);
+      }),
+      playerSkin: makeTex(ctx => fillNoise(ctx, '#dba276', 10)),
+      playerShirt: makeTex(ctx => {
+        fillNoise(ctx, '#268596', 14);
+        ctx.fillStyle = '#1b606e'; ctx.fillRect(14, 0, 4, 32);
+      }),
+      playerPants: makeTex(ctx => {
+        fillNoise(ctx, '#2e3675', 14);
+        ctx.fillStyle = '#1c1c1c'; ctx.fillRect(0, 26, 32, 6);
+      }),
+      zombieFace: makeTex(ctx => {
+        fillNoise(ctx, '#477a3b', 20);
+        ctx.fillStyle = '#284720'; ctx.fillRect(3, 6, 26, 4);
+        ctx.fillStyle = '#0d140d'; ctx.fillRect(4, 10, 8, 5); ctx.fillRect(20, 10, 8, 5);
+        ctx.fillStyle = '#ff2a2a'; ctx.fillRect(7, 12, 3, 2); ctx.fillRect(22, 12, 3, 2);
+        ctx.fillStyle = '#12210e'; ctx.fillRect(6, 22, 20, 5);
+      }),
+      zombieSkin: makeTex(ctx => fillNoise(ctx, '#477a3b', 22)),
+      zombieShirt: makeTex(ctx => fillNoise(ctx, '#24707d', 20)),
+      zombiePants: makeTex(ctx => fillNoise(ctx, '#352f6e', 18)),
+      creeperFace: makeTex(ctx => {
+        fillNoise(ctx, '#46ab3c', 28);
+        ctx.fillStyle = '#0f170f';
+        ctx.fillRect(5, 7, 7, 7); ctx.fillRect(20, 7, 7, 7);
+        ctx.fillRect(12, 14, 8, 9); ctx.fillRect(8, 18, 4, 9); ctx.fillRect(20, 18, 4, 9);
+      }),
+      creeperSkin: makeTex(ctx => fillNoise(ctx, '#42a339', 28)),
+      pigFace: makeTex(ctx => {
+        fillNoise(ctx, '#f09ea5', 14);
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(2, 11, 7, 4); ctx.fillRect(23, 11, 7, 4);
+        ctx.fillStyle = '#1a1a1a'; ctx.fillRect(2, 11, 4, 4); ctx.fillRect(26, 11, 4, 4);
+      }),
+      pigSnout: makeTex(ctx => {
+        fillNoise(ctx, '#ffadb5', 8);
+        ctx.fillStyle = '#6e252c'; ctx.fillRect(5, 9, 6, 12); ctx.fillRect(21, 9, 6, 12);
+      }),
+      pigSkin: makeTex(ctx => fillNoise(ctx, '#eb969e', 15)),
+      sheepFace: makeTex(ctx => {
+        fillNoise(ctx, '#d4bfa8', 12);
+        ctx.fillStyle = '#f2f2f2'; ctx.fillRect(0, 0, 32, 8);
+        ctx.fillStyle = '#1f1f1f'; ctx.fillRect(3, 11, 4, 4); ctx.fillRect(25, 11, 4, 4);
+      }),
+      sheepWool: makeTex(ctx => fillNoise(ctx, '#f2f2f2', 18)),
+      cowFace: makeTex(ctx => {
+        fillNoise(ctx, '#473223', 14);
+        ctx.fillStyle = '#f5f5f5'; ctx.fillRect(11, 2, 10, 15);
+        ctx.fillStyle = '#e39ea3'; ctx.fillRect(5, 19, 22, 11);
+      }),
+      cowHide: makeTex(ctx => {
+        fillNoise(ctx, '#473223', 15);
+        ctx.fillStyle = '#f2f2f2';
+        ctx.fillRect(2, 3, 12, 11); ctx.fillRect(17, 14, 12, 13);
+      })
+    };
+
+    // =========================================================================
+    // 3B. SEQUENCE-WISE ULTRA-COMPLEX MINECRAFT MONOLITH LOGO PAINTER
+    // =========================================================================
+    // stageProgress (0.0 -> 1.0) reveals the logo in 4 distinct Minecraft-textured construction phases!
+    function drawSequenceMonolithLogo(canvasEl, topWord, bottomWord, stageProgress = 1.0, showCrest = true) {
+      const ctx = canvasEl.getContext('2d');
+      const w = canvasEl.width;
+      const h = canvasEl.height;
+      ctx.clearRect(0, 0, w, h);
+      if (stageProgress <= 0.01) return;
+
+      ctx.save();
+
+      const stonePat  = ctx.createPattern(TexAssets.chiseledStone.canvas, 'repeat');
+      const mossyPat  = ctx.createPattern(TexAssets.mossyCobble.canvas, 'repeat');
+      const obsidPat  = ctx.createPattern(TexAssets.obsidian.canvas, 'repeat');
+      const goldPat   = ctx.createPattern(TexAssets.goldBlock.canvas, 'repeat');
+      const grassPat  = ctx.createPattern(TexAssets.grassTop.canvas, 'repeat');
+      const plankPat  = ctx.createPattern(TexAssets.planks.canvas, 'repeat');
+
+      // Phase A (0.0 -> 0.35): Multi-Tower Voxel Monolith Crest Assembly
+      if (showCrest) {
+        const crestAlpha = Math.min(1, stageProgress / 0.35);
+        ctx.save();
+        ctx.globalAlpha = crestAlpha;
+        const cx = w / 2;
+        const crestTop = 6;
+
+        // Stepped Obsidian Sanctuary Fortress Base
+        ctx.fillStyle = obsidPat;
+        ctx.fillRect(cx - 72, crestTop + 18, 144, 48);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#09070d';
+        ctx.strokeRect(cx - 72, crestTop + 18, 144, 48);
+
+        // Outer Mossy Cobblestone Bastions
+        ctx.fillStyle = mossyPat;
+        ctx.fillRect(cx - 64, crestTop + 8, 22, 54);
+        ctx.fillRect(cx + 42, crestTop + 8, 22, 54);
+        ctx.strokeRect(cx - 64, crestTop + 8, 22, 54);
+        ctx.strokeRect(cx + 42, crestTop + 8, 22, 54);
+
+        // Inner Chiseled Stone Twin Spires
+        ctx.fillStyle = stonePat;
+        ctx.fillRect(cx - 38, crestTop + 2, 22, 58);
+        ctx.fillRect(cx + 16, crestTop + 2, 22, 58);
+        ctx.strokeRect(cx - 38, crestTop + 2, 22, 58);
+        ctx.strokeRect(cx + 16, crestTop + 2, 22, 58);
+
+        // Lush Grass Block Turf Caps on all 4 Monolith Towers
+        ctx.fillStyle = grassPat;
+        ctx.fillRect(cx - 66, crestTop + 6, 26, 6);
+        ctx.fillRect(cx + 40, crestTop + 6, 26, 6);
+        ctx.fillRect(cx - 40, crestTop, 26, 7);
+        ctx.fillRect(cx + 14, crestTop, 26, 7);
+
+        // Central Gold & Diamond Portal Core
+        ctx.fillStyle = goldPat;
+        ctx.fillRect(cx - 16, crestTop + 8, 32, 48);
+        ctx.strokeRect(cx - 16, crestTop + 8, 32, 48);
+        ctx.fillStyle = '#4ff3ff';
+        ctx.fillRect(cx - 8, crestTop + 18, 16, 26);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(cx - 4, crestTop + 22, 6, 8);
+        ctx.restore();
+      }
+
+      // Phase B (0.2 -> 0.7): Sequence-Wise Letter-by-Letter 3D Voxel Extrusion of Top Word
+      if (stageProgress > 0.18) {
+        const wordProg = Math.min(1, (stageProgress - 0.18) / 0.48);
+        const visibleChars = Math.max(1, Math.ceil(topWord.length * wordProg));
+        const partialWord = topWord.slice(0, visibleChars);
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const mainSize = Math.floor(w * 0.102);
+        const mainY = showCrest ? h * 0.56 : h * 0.44;
+        ctx.font = `900 ${mainSize}px 'Courier New', monospace`;
+
+        // 12-Layer Deep Obsidian & Mossy Cobblestone 3D Extrusion
+        const maxDepth = Math.ceil(12 * wordProg);
+        for (let d = maxDepth; d >= 1; d--) {
+          ctx.fillStyle = d > 6 ? obsidPat : mossyPat;
+          ctx.fillText(partialWord, w / 2 + d * 1.4, mainY + d * 2.1);
+          ctx.lineWidth = 3.5;
+          ctx.strokeStyle = '#08060c';
+          ctx.strokeText(partialWord, w / 2 + d * 1.4, mainY + d * 2.1);
+        }
+
+        // Main Chiseled Stone Brick Letter Faces
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = '#111111';
+        ctx.strokeText(partialWord, w / 2, mainY);
+        ctx.fillStyle = stonePat;
+        ctx.fillText(partialWord, w / 2, mainY);
+
+        // Phase C (0.55 -> 0.85): Lush Grass-Block Turf Overhang & Gold Ore Crown
+        if (stageProgress > 0.52) {
+          const turfAlpha = Math.min(1, (stageProgress - 0.52) / 0.25);
+          ctx.save();
+          ctx.globalAlpha = turfAlpha;
+          ctx.beginPath();
+          ctx.rect(0, mainY - mainSize * 0.55, w, mainSize * 0.34);
+          ctx.clip();
+          ctx.fillStyle = grassPat;
+          ctx.fillText(partialWord, w / 2, mainY - 1);
+          ctx.lineWidth = 1.6;
+          ctx.strokeStyle = '#7ed944';
+          ctx.strokeText(partialWord, w / 2, mainY - 2);
+          ctx.restore();
+        }
+      }
+
+      // Phase D (0.68 -> 1.0): Bottom Textured Oak Planks & Gold Block Studio Plaque
+      if (bottomWord && stageProgress > 0.65) {
+        const plaqueAlpha = Math.min(1, (stageProgress - 0.65) / 0.3);
+        ctx.save();
+        ctx.globalAlpha = plaqueAlpha;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        const subSize = Math.floor(w * 0.042);
+        const subY = h * 0.86;
+        const pw = Math.min(w * 0.9, bottomWord.length * (subSize * 0.66) + 38);
+        const ph = subSize + 16;
+        const px = (w - pw) / 2;
+        const py = subY - ph / 2;
+
+        ctx.fillStyle = '#0b090e';
+        ctx.fillRect(px + 4, py + 5, pw, ph);
+
+        ctx.fillStyle = plankPat;
+        ctx.fillRect(px, py, pw, ph);
+        ctx.lineWidth = 3.5;
+        ctx.strokeStyle = goldPat;
+        ctx.strokeRect(px, py, pw, ph);
+
+        ctx.fillStyle = '#4ff3ff';
+        [[px+4, py+4], [px+pw-8, py+4], [px+4, py+ph-8], [px+pw-8, py+ph-8]].forEach(([dx, dy]) => {
+          ctx.fillRect(dx, dy, 4, 4);
+        });
+
+        ctx.font = `900 ${subSize}px 'Courier New', monospace`;
+        ctx.fillStyle = '#0f0c08';
+        ctx.fillText(bottomWord, w / 2 + 2, subY + 2);
+        ctx.fillStyle = goldPat;
+        ctx.fillText(bottomWord, w / 2, subY);
+        ctx.restore();
+      }
+
+      ctx.restore();
+    }
+
+    drawSequenceMonolithLogo(
+      document.getElementById('title-logo-canvas'),
+      'MINECRAFT',
+      'ARJUN.OFFICIAL STUDIO',
+      1.0,
+      true
+    );
+    drawSequenceMonolithLogo(
+      document.getElementById('about-logo-canvas'),
+      'ARJUN.OFFICIAL',
+      'OVERWORLD SURVIVAL STUDIO',
+      1.0,
+      false
+    );
+
+    const ITEMS = {
+      1: { name: 'Grass Block', isBlock: true, snd: 'grass', friction: 10, hardness: 0.55, icon: TexAssets.grassSide.canvas, color: '#52992e', mats: [
+        fastMat(TexAssets.grassSide), fastMat(TexAssets.grassSide), fastMat(TexAssets.grassTop),
+        fastMat(TexAssets.dirt), fastMat(TexAssets.grassSide), fastMat(TexAssets.grassSide)
+      ]},
+      2: { name: 'Dirt', isBlock: true, snd: 'grass', friction: 10, hardness: 0.5, icon: TexAssets.dirt.canvas, color: '#7a563a', mats: fastMat(TexAssets.dirt) },
+      3: { name: 'Cobblestone', isBlock: true, snd: 'stone', friction: 11, hardness: 1.2, tool: 'pick', icon: TexAssets.cobble.canvas, color: '#686868', mats: fastMat(TexAssets.cobble) },
+      4: { name: 'Stone', isBlock: true, snd: 'stone', friction: 11, hardness: 1.3, drop: 3, tool: 'pick', icon: TexAssets.stone.canvas, color: '#767676', mats: fastMat(TexAssets.stone) },
+      5: { name: 'Oak Log', isBlock: true, snd: 'wood', friction: 10, hardness: 0.95, icon: TexAssets.logSide.canvas, color: '#5c4024', mats: [
+        fastMat(TexAssets.logSide), fastMat(TexAssets.logSide), fastMat(TexAssets.logTop),
+        fastMat(TexAssets.logTop), fastMat(TexAssets.logSide), fastMat(TexAssets.logSide)
+      ]},
+      6: { name: 'Oak Leaves', isBlock: true, snd: 'grass', hardness: 0.25, icon: TexAssets.leaves.canvas, color: '#2b6918', mats: fastMat(TexAssets.leaves) },
+      7: { name: 'Oak Planks', isBlock: true, snd: 'wood', friction: 10, hardness: 0.85, icon: TexAssets.planks.canvas, color: '#ad854e', mats: fastMat(TexAssets.planks) },
+      8: { name: 'River Sand', isBlock: true, snd: 'grass', friction: 7.5, hardness: 0.45, icon: TexAssets.sand.canvas, color: '#e0d3a2', mats: fastMat(TexAssets.sand) },
+      9: { name: 'Cactus', isBlock: true, snd: 'wood', hardness: 0.4, icon: TexAssets.cactus.canvas, color: '#2b7a24', mats: fastMat(TexAssets.cactus) },
+      10: { name: 'Coal Ore', isBlock: true, snd: 'stone', hardness: 1.5, tool: 'pick', icon: TexAssets.coal.canvas, color: '#222', mats: fastMat(TexAssets.coal) },
+      11: { name: 'Iron Ore', isBlock: true, snd: 'stone', hardness: 1.8, tool: 'pick', icon: TexAssets.iron.canvas, color: '#e0b79b', mats: fastMat(TexAssets.iron) },
+      12: { name: 'Gold Ore', isBlock: true, snd: 'stone', hardness: 2.1, tool: 'pick', icon: TexAssets.gold.canvas, color: '#ffef42', mats: fastMat(TexAssets.gold) },
+      13: { name: 'Diamond Ore', isBlock: true, snd: 'stone', hardness: 2.5, tool: 'pick', icon: TexAssets.diamond.canvas, color: '#4ff3ff', mats: fastMat(TexAssets.diamond) },
+      14: { name: 'Tree Vines', isBlock: true, isCrossQuad: true, nonSolid: true, climbable: true, snd: 'grass', hardness: 0.15, icon: TexAssets.vines.canvas, color: '#3a8522', mats: fastMat(TexAssets.vines, { alphaTest: 0.5, doubleSide: true }) },
+      15: { name: '3D Tall Grass', isBlock: true, isCrossQuad: true, nonSolid: true, snd: 'grass', hardness: 0.08, drop: 42, icon: TexAssets.tallGrass.canvas, color: '#4e9628', mats: fastMat(TexAssets.tallGrass, { alphaTest: 0.5, doubleSide: true }) },
+      34: { name: 'Red Poppy', isBlock: true, isCrossQuad: true, nonSolid: true, snd: 'grass', hardness: 0.08, drop: 43, icon: TexAssets.poppyFlower.canvas, color: '#d92626', mats: fastMat(TexAssets.poppyFlower, { alphaTest: 0.5, doubleSide: true }) },
+      16: { name: 'Glowstone Torch', isBlock: true, isLight: true, snd: 'stone', hardness: 0.3, icon: TexAssets.torch.canvas, color: '#ffffaa', mats: fastMat(TexAssets.torch, { emissive: 0xffcc33, emissiveInt: 0.75 }) },
+      47: { name: 'Lit Campfire', isBlock: true, isLight: true, snd: 'wood', hardness: 0.6, icon: TexAssets.campfire.canvas, color: '#ff6600', mats: fastMat(TexAssets.campfire, { emissive: 0xff5500, emissiveInt: 0.6 }) },
+      17: { name: 'Brick Block', isBlock: true, snd: 'stone', hardness: 1.4, tool: 'pick', icon: TexAssets.brick.canvas, color: '#993e2e', mats: fastMat(TexAssets.brick) },
+      18: { name: 'Glass', isBlock: true, snd: 'stone', hardness: 0.3, icon: TexAssets.glass.canvas, color: '#dff6ff', mats: fastMat(TexAssets.glass, { transparent: true, opacity: 0.42, depthWrite: false }) },
+      19: { name: 'TNT Explosive', isBlock: true, snd: 'wood', hardness: 0.3, icon: TexAssets.tnt.canvas, color: '#cc2929', mats: fastMat(TexAssets.tnt) },
+      20: { name: 'Bedrock', isBlock: true, snd: 'stone', hardness: 999, icon: TexAssets.bedrock.canvas, color: '#222', mats: fastMat(TexAssets.bedrock) },
+      21: { name: 'Waterfall / River Water', isBlock: true, nonSolid: true, snd: 'water', hardness: 999, icon: TexAssets.water.canvas, color: '#1c63e6', mats: fastMat(TexAssets.water, { transparent: true, opacity: 0.72, depthWrite: false }) },
+      30: { name: 'Red Bed (Sleep)', isBlock: true, snd: 'wood', hardness: 0.6, icon: TexAssets.bedTop.canvas, color: '#c92a2a', mats: [
+        fastMat(TexAssets.bedSide), fastMat(TexAssets.bedSide), fastMat(TexAssets.bedTop),
+        fastMat(TexAssets.planks), fastMat(TexAssets.bedSide), fastMat(TexAssets.bedSide)
+      ]},
+      38: { name: 'White Wool', isBlock: true, snd: 'grass', hardness: 0.4, icon: TexAssets.wool.canvas, color: '#f2f2f5', mats: fastMat(TexAssets.wool) },
+      39: { name: 'Mountain Snow Peak', isBlock: true, snd: 'grass', friction: 5.5, hardness: 0.5, icon: TexAssets.snowSide.canvas, color: '#f2f7ff', mats: [
+        fastMat(TexAssets.snowSide), fastMat(TexAssets.snowSide), fastMat(TexAssets.snowTop),
+        fastMat(TexAssets.stone), fastMat(TexAssets.snowSide), fastMat(TexAssets.snowSide)
+      ]},
+      46: { name: 'Starter Chest', isBlock: true, snd: 'wood', hardness: 0.5, icon: TexAssets.chestSide.canvas, color: '#9c6932', mats: [
+        fastMat(TexAssets.chestSide), fastMat(TexAssets.chestSide), fastMat(TexAssets.planks),
+        fastMat(TexAssets.planks), fastMat(TexAssets.chestSide), fastMat(TexAssets.chestSide)
+      ]},
+      22: { name: 'Wooden Stick', isBlock: false, icon: drawToolIcon('#8b5a2b'), dmg: 2 },
+      23: { name: 'Wooden Pickaxe', isBlock: false, icon: drawToolIcon('#ad854e'), pick: 2.3, dmg: 3, headCol: 0xad854e },
+      24: { name: 'Stone Pickaxe', isBlock: false, icon: drawToolIcon('#888888'), pick: 3.8, dmg: 4, headCol: 0x888888 },
+      25: { name: 'Iron Pickaxe', isBlock: false, icon: drawToolIcon('#e6e6e6'), pick: 6.0, dmg: 5, headCol: 0xe6e6e6 },
+      26: { name: 'Diamond Pickaxe', isBlock: false, icon: drawToolIcon('#4ff3ff'), pick: 10.0, dmg: 7, headCol: 0x4ff3ff },
+      27: { name: 'Stone Sword', isBlock: false, isSword: true, icon: drawToolIcon('#888888', true), dmg: 7, headCol: 0x888888 },
+      28: { name: 'Diamond Sword', isBlock: false, isSword: true, icon: drawToolIcon('#4ff3ff', true), dmg: 14, headCol: 0x4ff3ff },
+      32: { name: 'Iron Armor Set', isBlock: false, isArmor: true, defense: 6, armorCol: 0xe0e0e0, icon: drawArmorIcon('#e0e0e0') },
+      33: { name: 'Diamond Armor Set', isBlock: false, isArmor: true, defense: 10, armorCol: 0x4ff3ff, icon: drawArmorIcon('#4ff3ff') },
+      45: { name: 'Leather Armor', isBlock: false, isArmor: true, defense: 3, armorCol: 0x9c522b, icon: drawArmorIcon('#9c522b') },
+      29: { name: 'Cooked Steak (+5 Food)', isBlock: false, isFood: true, heal: 5, hunger: 5, color: '#8c3b20', icon: TexAssets.cookedSteak.canvas },
+      35: { name: 'Raw Meat (Cook in Bag)', isBlock: false, isFood: true, heal: 1, hunger: 2, color: '#e05360', icon: TexAssets.rawMeat.canvas },
+      37: { name: 'Animal Leather', isBlock: false, icon: TexAssets.leather.canvas, dmg: 1 },
+      41: { name: 'Gunpowder', isBlock: false, icon: TexAssets.gunpowder.canvas, dmg: 1 },
+      42: { name: 'Wild Berries (+2 Food)', isBlock: false, isFood: true, heal: 2, hunger: 2, color: '#eb2842', icon: TexAssets.berries.canvas },
+      43: { name: 'Red Apple (+3 Food)', isBlock: false, isFood: true, heal: 3, hunger: 3, color: '#e32626', icon: TexAssets.apple.canvas },
+      48: { name: 'Golden Apple (Full Heal + Shield)', isBlock: false, isFood: true, heal: 10, hunger: 10, bonusShield: 4, color: '#ffd700', icon: TexAssets.goldenApple.canvas }
+    };
+
+    const RECIPES = [
+      { out: 7,  qty: 4, cost: [[5, 1]], title: '4 Oak Planks' },
+      { out: 22, qty: 4, cost: [[7, 2]], title: '4 Wooden Sticks' },
+      { out: 29, qty: 1, cost: [[35, 1]], title: 'Cook Raw Meat → Steak' },
+      { out: 47, qty: 1, cost: [[5, 1], [10, 1]], title: 'Lit Campfire (Log+Coal)' },
+      { out: 30, qty: 1, cost: [[7, 2], [38, 1]], title: 'Craft Bed (Planks+Wool)' },
+      { out: 23, qty: 1, cost: [[7, 3], [22, 2]], title: 'Wooden Pickaxe' },
+      { out: 24, qty: 1, cost: [[3, 3], [22, 2]], title: 'Stone Pickaxe' },
+      { out: 27, qty: 1, cost: [[3, 2], [22, 1]], title: 'Stone Sword' },
+      { out: 45, qty: 1, cost: [[37, 2]], title: 'Leather Armor' },
+      { out: 16, qty: 4, cost: [[10, 1], [22, 1]], title: '4 Glowstone Torches' },
+      { out: 48, qty: 1, cost: [[43, 1], [12, 1]], title: 'Golden Apple (Apple+Gold)' },
+      { out: 25, qty: 1, cost: [[11, 2], [22, 2]], title: 'Iron Pickaxe' },
+      { out: 32, qty: 1, cost: [[11, 3]], title: 'Iron Armor Set' },
+      { out: 19, qty: 2, cost: [[41, 1], [8, 2]], title: '2 TNT (Gunpowder+Sand)' },
+      { out: 26, qty: 1, cost: [[13, 2], [22, 2]], title: 'Diamond Pickaxe' },
+      { out: 28, qty: 1, cost: [[13, 2], [22, 1]], title: 'Diamond Sword' }
+    ];
+
+    const State = {
+      xp: 0, xpLevel: 1,
+      armorDefense: 0,
+      spawnX: 0.5, spawnY: 14, spawnZ: 0.5,
+      inv: { 23: 1, 27: 1, 43: 3, 47: 1, 16: 4, 1: 8 },
+      hotbar: [23, 27, 43, 29, 47, 5, 7, 14, 16]
+    };
+
+    function addXP(amount) {
+      State.xp += amount;
+      while (State.xp >= 100) {
+        State.xp -= 100;
+        State.xpLevel++;
+      }
+      document.getElementById('xp-lvl-badge').textContent = `LVL ${State.xpLevel}`;
+      document.getElementById('xp-fill').style.width = `${State.xp}%`;
+    }
+
+    // =========================================================================
+    // 4. THREE.JS GLITCH-FREE RENDERER & 20-SECOND 5-ACT MONOLITH INTRO SCENE
+    // =========================================================================
+    const scene = new THREE.Scene();
+    const skyDay = new THREE.Color(0x88b4f8);
+    const skySunset = new THREE.Color(0xd97248);
+    const skyNight = new THREE.Color(0x090d1a);
+    scene.background = skyDay.clone();
+    scene.fog = new THREE.Fog(0x88b4f8, 12, Config.fogFar);
+
+    const camera = new THREE.PerspectiveCamera(Config.fov, window.innerWidth / window.innerHeight, 0.18, 85);
+
+    const handScene = new THREE.Scene();
+    const handCam = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 10);
+    handScene.add(new THREE.AmbientLight(0xffffff, 0.85));
+    const handDir = new THREE.DirectionalLight(0xfff5e0, 0.8);
+    handDir.position.set(2, 4, 3);
+    handScene.add(handDir);
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas: document.getElementById('game-canvas'),
+      antialias: true,
+      powerPreference: 'high-performance'
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+    renderer.autoClear = false;
+
+    const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+    const waterGeo = new THREE.BoxGeometry(0.996, 0.88, 0.996);
+
+    function createCrossedQuadGeometry() {
+      const geo = new THREE.BufferGeometry();
+      const s = 0.44;
+      const positions = new Float32Array([
+        -s, -0.5, -s,   s, -0.5,  s,   s,  0.5,  s,
+        -s, -0.5, -s,   s,  0.5,  s,  -s,  0.5, -s,
+        -s, -0.5,  s,   s, -0.5, -s,   s,  0.5, -s,
+        -s, -0.5,  s,   s,  0.5, -s,  -s,  0.5,  s
+      ]);
+      const normals = new Float32Array([
+        0, 1, 0,  0, 1, 0,  0, 1, 0,  0, 1, 0,  0, 1, 0,  0, 1, 0,
+        0, 1, 0,  0, 1, 0,  0, 1, 0,  0, 1, 0,  0, 1, 0,  0, 1, 0
+      ]);
+      const uvs = new Float32Array([
+        0, 0,  1, 0,  1, 1,  0, 0,  1, 1,  0, 1,
+        0, 0,  1, 0,  1, 1,  0, 0,  1, 1,  0, 1
+      ]);
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
+      geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+      return geo;
+    }
+    const crossQuadGeo = createCrossedQuadGeometry();
+    const dummy = new THREE.Object3D();
+
+    // ==================== 20-SECOND ULTRA-COMPLEX 3D MINECRAFT MONOLITH INTRO SCENE ====================
+    const introScene = new THREE.Scene();
+    introScene.background = new THREE.Color(0x16110c);
+    introScene.fog = new THREE.FogExp2(0x16110c, 0.035);
+
+    const introCam = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 75);
+    introScene.add(new THREE.AmbientLight(0xffe8c8, 0.64));
+    const introKeyLight = new THREE.DirectionalLight(0xffcf78, 0.95);
+    introKeyLight.position.set(14, 26, 18);
+    introScene.add(introKeyLight);
+    const introCoreLight = new THREE.PointLight(0xff9911, 2.5, 24, 1.4);
+    introCoreLight.position.set(0, 5.5, 1.5);
+    introScene.add(introCoreLight);
+
+    const monolithBlocks = [];
+    const floatingRunes = [];
+    (() => {
+      const mObsidian = fastMat(TexAssets.obsidian);
+      const mChiseled = fastMat(TexAssets.chiseledStone);
+      const mMossy    = fastMat(TexAssets.mossyCobble);
+      const mGold     = fastMat(TexAssets.goldBlock);
+      const mDiamond  = fastMat(TexAssets.diamond);
+      const mCore     = fastMat(TexAssets.torch, { emissive: 0xffaa00, emissiveInt: 0.9 });
+      const mGrass    = ITEMS[1].mats;
+      const mLog      = ITEMS[5].mats;
+      const mLeaves   = ITEMS[6].mats;
+      const mVine     = ITEMS[14].mats;
+      const mWater    = ITEMS[21].mats;
+
+      function addMonolithVoxel(x, y, z, mat, delayWindow, sndType = 'stone', geo = boxGeo) {
+        const mesh = new THREE.Mesh(geo, mat);
+        const startY = y + 14 + Math.random() * 6;
+        mesh.position.set(x, startY, z);
+        mesh.scale.setScalar(0.001);
+        introScene.add(mesh);
+        monolithBlocks.push({
+          mesh,
+          tx: x, ty: y, tz: z,
+          sy: startY,
+          tStart: delayWindow[0],
+          tEnd: delayWindow[1],
+          sndType,
+          locked: false
+        });
+      }
+
+      // ACT I (0.0s - 4.0s): 9x7 Overworld Sanctuary Foundation with Grass, Mossy Cobble & Water Channels
+      for (let x = -4; x <= 4; x++) {
+        for (let z = -3; z <= 3; z++) {
+          const dist = Math.abs(x) + Math.abs(z);
+          if (dist <= 6) {
+            const isWater = (Math.abs(x) === 2 && z >= 0 && z <= 2);
+            const mat = isWater ? mWater : (dist >= 5 ? mGrass : ((x + z) % 2 === 0 ? mChiseled : mMossy));
+            const d = (dist * 0.28) + Math.random() * 0.8;
+            addMonolithVoxel(x, 0, z, mat, [d, d + 1.2], 'stone');
+          }
+        }
+      }
+
+      // ACT II (4.0s - 8.0s): 4 Corner Ancient Oak Timber & Torch Braziers + Twin Obsidian Pillars & Waterfalls
+      [[-4,-2],[4,-2],[-4,2],[4,2]].forEach(([px, pz], idx) => {
+        const baseT = 3.8 + idx * 0.45;
+        addMonolithVoxel(px, 1, pz, mLog, [baseT, baseT + 0.9], 'wood');
+        addMonolithVoxel(px, 2, pz, mLog, [baseT + 0.3, baseT + 1.1], 'wood');
+        addMonolithVoxel(px, 3, pz, mChiseled, [baseT + 0.6, baseT + 1.4], 'stone');
+        addMonolithVoxel(px, 4, pz, mCore, [baseT + 0.9, baseT + 1.6], 'stone');
+      });
+
+      for (let y = 1; y <= 8; y++) {
+        const tTower = 4.2 + y * 0.38;
+        // Twin Obsidian & Chiseled Stone Pillars
+        addMonolithVoxel(-2, y, 0, y % 2 === 0 ? mChiseled : mObsidian, [tTower, tTower + 0.95], 'stone');
+        addMonolithVoxel( 2, y, 0, y % 2 === 0 ? mChiseled : mObsidian, [tTower, tTower + 0.95], 'stone');
+
+        if (y <= 6) {
+          addMonolithVoxel(-3, y, 0, y === 3 || y === 5 ? mGold : mMossy, [tTower + 0.25, tTower + 1.1], 'stone');
+          addMonolithVoxel( 3, y, 0, y === 3 || y === 5 ? mGold : mMossy, [tTower + 0.25, tTower + 1.1], 'stone');
+          if (y <= 5) {
+            addMonolithVoxel(-3, y, 1, mWater, [tTower + 0.4, tTower + 1.2], 'water', waterGeo);
+            addMonolithVoxel( 3, y, 1, mWater, [tTower + 0.4, tTower + 1.2], 'water', waterGeo);
+          }
+        }
+      }
+
+      // ACT III (8.0s - 12.0s): Central Gold, Diamond & Beacon Core + Hanging Vines + Crown Arch
+      for (let y = 2; y <= 7; y++) {
+        const tCore = 7.8 + (y - 2) * 0.5;
+        addMonolithVoxel(0, y, 0, (y === 4 || y === 5) ? mDiamond : mCore, [tCore, tCore + 1.0], 'craft');
+        addMonolithVoxel(-1, y, 0, y % 2 === 0 ? mGold : mChiseled, [tCore + 0.15, tCore + 1.1], 'stone');
+        addMonolithVoxel( 1, y, 0, y % 2 === 0 ? mGold : mChiseled, [tCore + 0.15, tCore + 1.1], 'stone');
+        if (y >= 3 && y <= 6) {
+          addMonolithVoxel(-2, y, 1, mVine, [tCore + 0.3, tCore + 1.2], 'wood', crossQuadGeo);
+          addMonolithVoxel( 2, y, 1, mVine, [tCore + 0.3, tCore + 1.2], 'wood', crossQuadGeo);
+        }
+      }
+
+      for (let x = -3; x <= 3; x++) {
+        addMonolithVoxel(x, 8, 0, Math.abs(x) <= 1 ? mGold : mChiseled, [10.4, 11.5], 'stone');
+      }
+      addMonolithVoxel(-2, 9, 0, mLeaves,   [10.8, 11.7], 'wood');
+      addMonolithVoxel(-1, 9, 0, mChiseled, [10.9, 11.8], 'stone');
+      addMonolithVoxel( 0, 9, 0, mGold,     [11.0, 11.9], 'craft');
+      addMonolithVoxel( 1, 9, 0, mChiseled, [10.9, 11.8], 'stone');
+      addMonolithVoxel( 2, 9, 0, mLeaves,   [10.8, 11.7], 'wood');
+      addMonolithVoxel( 0, 10, 0, mDiamond, [11.2, 12.1], 'craft');
+
+      // ACT IV (12.0s - 16.5s): 3D Voxel Crest Crown Sculpture above the Monolith Spire (y = 11 to 13)
+      const crestSculpture = [
+        [-3,11,0,mGold], [-2,11,0,mDiamond], [-1,11,0,mGold], [0,11,0,mCore], [1,11,0,mGold], [2,11,0,mDiamond], [3,11,0,mGold],
+        [-2,12,0,mChiseled], [0,12,0,mDiamond], [2,12,0,mChiseled],
+        [0,13,0,mGold]
+      ];
+      crestSculpture.forEach(([cx, cy, cz, mat], i) => {
+        const tS = 12.0 + i * 0.22;
+        addMonolithVoxel(cx, cy, cz, mat, [tS, tS + 0.9], 'craft');
+      });
+
+      // 12 Orbiting Voxel Runes around the Monolith
+      for (let i = 0; i < 12; i++) {
+        const rMesh = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.42, 0.42), i % 3 === 0 ? mDiamond : (i % 2 === 0 ? mGold : mCore));
+        introScene.add(rMesh);
+        floatingRunes.push({ mesh: rMesh, angle: (i / 12) * Math.PI * 2, height: 2.2 + (i % 4) * 2.1 });
+      }
+    })();
+
+    let introActive = true;
+    let chordSwellPlayed = false;
+    const INTRO_DURATION = 20.0; // Full 20.0-Second Sequence-Wise Intro
+    const introStartTime = performance.now();
+    const introOverlayEl = document.getElementById('studio-intro-overlay');
+    const introLogoCanvas = document.getElementById('intro-logo-canvas');
+
+    function completeIntroSequence() {
+      if (!introActive) return;
+      introActive = false;
+      introOverlayEl.classList.add('hidden');
+      document.getElementById('page-title').classList.remove('hidden');
+    }
+
+    document.getElementById('btn-intro-audio').addEventListener('pointerdown', e => {
+      e.stopPropagation();
+      AudioEngine.init();
+      AudioEngine.playChordSwell();
+      e.currentTarget.textContent = 'Sound Active';
+    });
+    document.getElementById('btn-intro-skip').addEventListener('pointerdown', e => {
+      e.stopPropagation();
+      AudioEngine.init();
+      completeIntroSequence();
+    });
+
+    function updateAndRenderIntro(now) {
+      const elapsed = (now - introStartTime) / 1000;
+      if (elapsed >= INTRO_DURATION) {
+        completeIntroSequence();
+        return;
+      }
+
+      // Animate every block of the Ultra-Complex Monolith with Natural Acoustic SFX
+      monolithBlocks.forEach(b => {
+        if (elapsed < b.tStart) {
+          b.mesh.scale.setScalar(0.001);
+        } else if (elapsed >= b.tEnd) {
+          b.mesh.position.set(b.tx, b.ty, b.tz);
+          b.mesh.scale.setScalar(1);
+          if (!b.locked) {
+            b.locked = true;
+            if (Math.random() < 0.22) {
+              if (b.sndType === 'wood') AudioEngine.playWoodCut(false);
+              else if (b.sndType === 'craft') AudioEngine.playCraft();
+              else if (b.sndType === 'water') AudioEngine.playWalk('water');
+              else AudioEngine.playStoneCut(false);
+            }
+          }
+        } else {
+          const p = (elapsed - b.tStart) / (b.tEnd - b.tStart);
+          const ease = 1 - Math.pow(1 - p, 3);
+          b.mesh.position.set(b.tx, b.sy + (b.ty - b.sy) * ease, b.tz);
+          b.mesh.scale.setScalar(Math.min(1, p * 1.5));
+        }
+      });
+
+      floatingRunes.forEach((r, idx) => {
+        const appear = Math.max(0, Math.min(1, (elapsed - 6.0) / 2.0));
+        r.mesh.scale.setScalar(appear);
+        const a = r.angle + elapsed * 0.85;
+        const rad = 5.2 + Math.sin(elapsed * 1.8 + idx) * 0.4;
+        r.mesh.position.set(Math.cos(a) * rad, r.height + Math.sin(elapsed * 2.5 + idx) * 0.3, Math.sin(a) * rad);
+        r.mesh.rotation.x += 0.025;
+        r.mesh.rotation.y += 0.035;
+      });
+
+      // 5-Act 20.0-Second Camera & Sequence-Wise Logo Choreography
+      if (elapsed < 4.0) {
+        // Act I (0.0s - 4.0s): Low sweeping orbit around the Sanctuary Altar Foundation
+        const p = elapsed / 4.0;
+        const ang = -0.9 + p * 0.9;
+        introCam.position.set(Math.sin(ang) * 10.5, 2.2 + p * 1.4, Math.cos(ang) * 10.5);
+        introCam.lookAt(0, 1.8, 0);
+        drawSequenceMonolithLogo(introLogoCanvas, '', '', 0, false);
+      } else if (elapsed < 8.0) {
+        // Act II (4.0s - 8.0s): Rising camera as Twin Obsidian Towers, Braziers & Waterfalls assemble
+        const p = (elapsed - 4.0) / 4.0;
+        const ang = p * 0.65;
+        introCam.position.set(Math.sin(ang) * 11.5, 3.6 + p * 2.2, Math.cos(ang) * 11.5);
+        introCam.lookAt(0, 4.2, 0);
+        drawSequenceMonolithLogo(introLogoCanvas, '', '', 0, false);
+      } else if (elapsed < 12.0) {
+        // Act III (8.0s - 12.0s): Orbiting the Gold/Diamond Citadel Core & Crown Arch
+        const p = (elapsed - 8.0) / 4.0;
+        const ang = 0.65 - p * 0.65;
+        introCam.position.set(Math.sin(ang) * 12.2, 5.8 + p * 1.0, Math.cos(ang) * 12.2);
+        introCam.lookAt(0, 5.8, 0);
+        drawSequenceMonolithLogo(introLogoCanvas, '', '', 0, false);
+      } else if (elapsed < 16.5) {
+        // Act IV (12.0s - 16.5s): Sequence-Wise Construction of the Textured ARJUN.OFFICIAL STUDIO Monolith Logo
+        if (!chordSwellPlayed) {
+          chordSwellPlayed = true;
+          AudioEngine.playChordSwell();
+        }
+        const p = (elapsed - 12.0) / 4.5;
+        introCam.position.set(Math.sin(p * 0.3) * 1.0, 6.4, 12.5 - p * 0.8);
+        introCam.lookAt(0, 6.0, 0);
+        drawSequenceMonolithLogo(
+          introLogoCanvas,
+          'ARJUN.OFFICIAL',
+          'ARJUN.OFFICIAL STUDIO',
+          p,
+          true
+        );
+      } else {
+        // Act V (16.5s - 20.0s): Grand Hold & Seamless Portal Fly-Through into the Overworld
+        const p = (elapsed - 16.5) / 3.5;
+        const dive = Math.max(0, (p - 0.35) / 0.65);
+        const easeDive = dive * dive;
+        introCam.position.set(0, 6.4 - easeDive * 1.4, 11.7 - easeDive * 10.9);
+        introCam.lookAt(0, 5.2, 0);
+        drawSequenceMonolithLogo(
+          introLogoCanvas,
+          'ARJUN.OFFICIAL',
+          'ARJUN.OFFICIAL STUDIO',
+          Math.max(0, 1 - easeDive * 1.6),
+          true
+        );
+      }
+
+      renderer.clear();
+      renderer.render(introScene, introCam);
+    }
+
+    // ==================== MAIN OVERWORLD LIGHTING & GEOMETRY ====================
+    const hemiLight = new THREE.HemisphereLight(0xe6f2ff, 0x3b352b, 0.74);
+    scene.add(hemiLight);
+
+    const sunLight = new THREE.DirectionalLight(0xfff4d6, 0.88);
+    sunLight.position.set(35, 60, 25);
+    scene.add(sunLight);
+
+    const torchLight = new THREE.PointLight(0xffaa33, 0, 13, 1.5);
+    scene.add(torchLight);
+
+    const sunGroup = new THREE.Group();
+    const sunCore = new THREE.Mesh(
+      new THREE.BoxGeometry(8, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0xffffa8, fog: false })
+    );
+    const sunHalo = new THREE.Mesh(
+      new THREE.BoxGeometry(13, 13, 13),
+      new THREE.MeshBasicMaterial({ color: 0xffcc44, transparent: true, opacity: 0.34, fog: false })
+    );
+    sunGroup.add(sunCore, sunHalo);
+    scene.add(sunGroup);
+
+    const moonMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(6, 6, 6),
+      new THREE.MeshBasicMaterial({ color: 0xd8e8ff, fog: false })
+    );
+    scene.add(moonMesh);
+
+    const cloudGroup = new THREE.Group();
+    const cloudMat = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false });
+    for (let i = 0; i < 10; i++) {
+      const c = new THREE.Mesh(new THREE.BoxGeometry(8 + (Math.random()*8|0), 1.5, 6 + (Math.random()*7|0)), cloudMat);
+      c.position.set((Math.random()-0.5)*90, 25 + Math.random()*3, (Math.random()-0.5)*90);
+      cloudGroup.add(c);
+    }
+    scene.add(cloudGroup);
+
+    const avatar = (() => {
+      const group = new THREE.Group();
+      const skinMat = fastMat(TexAssets.playerSkin);
+      const faceMat = fastMat(TexAssets.playerFace);
+      const hairMat = new THREE.MeshLambertMaterial({ color: 0x3b2514 });
+      const shirtMat = fastMat(TexAssets.playerShirt);
+      const pantsMat = fastMat(TexAssets.playerPants);
+
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.46, 0.46), [
+        skinMat, skinMat, hairMat, skinMat, faceMat, hairMat
+      ]);
+      head.position.y = 1.48;
+
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.68, 0.24), shirtMat);
+      body.position.y = 0.91;
+
+      const armorPlate = new THREE.Mesh(
+        new THREE.BoxGeometry(0.52, 0.7, 0.3),
+        new THREE.MeshLambertMaterial({ color: 0xe0e0e0 })
+      );
+      armorPlate.position.y = 0.91;
+      armorPlate.visible = false;
+
+      function makePlayerArm(x) {
+        const p = new THREE.Group();
+        p.position.set(x, 1.22, 0);
+        const sleeve = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.28, 0.22), shirtMat);
+        sleeve.position.y = -0.12;
+        const forearm = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.2), skinMat);
+        forearm.position.y = -0.44;
+        p.add(sleeve, forearm);
+        return p;
+      }
+      const armL = makePlayerArm(-0.34);
+      const armR = makePlayerArm(0.34);
+
+      const legGeo = new THREE.BoxGeometry(0.21, 0.58, 0.21);
+      const legL = new THREE.Mesh(legGeo, pantsMat); legL.position.set(-0.12, 0.29, 0);
+      const legR = new THREE.Mesh(legGeo, pantsMat); legR.position.set(0.12, 0.29, 0);
+
+      group.add(head, body, armorPlate, armL, armR, legL, legR);
+      group.visible = false;
+      scene.add(group);
+      return { group, head, armorPlate, armL, armR, legL, legR };
+    })();
+
+    // =========================================================================
+    // 5. TERRAIN GENERATOR: RIVERS, SNOW MOUNTAINS & CASCADING WATERFALLS
+    // =========================================================================
+    const CHUNK_SIZE = 12;
+    const WATER_LEVEL = 4;
+    let worldSeed = 90210;
+    const chunks = new Map();
+    const chunkMeshes = new Map();
+    const editedBlocks = new Map();
+    const chunkQueue = [];
+    const animatedBlocks = [];
+    const lootDrops = [];
+    const waterfallMist = [];
+
+    function hash2(x, z) {
+      let n = Math.sin((x + worldSeed) * 127.1 + (z + worldSeed) * 311.7) * 43758.5453;
+      return n - Math.floor(n);
+    }
+    function hash3(x, y, z) {
+      let n = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719 + worldSeed) * 43758.5453;
+      return n - Math.floor(n);
+    }
+    function smoothNoise(x, z) {
+      const ix = Math.floor(x), iz = Math.floor(z);
+      const fx = x - ix, fz = z - iz;
+      const u = fx * fx * (3 - 2 * fx), v = fz * fz * (3 - 2 * fz);
+      return (hash2(ix,iz)*(1-u) + hash2(ix+1,iz)*u)*(1-v) + (hash2(ix,iz+1)*(1-u) + hash2(ix+1,iz+1)*u)*v;
+    }
+
+    function getRiverCenterZ(x) {
+      return Math.sin(x * 0.065) * 9.0 + (smoothNoise(x * 0.03, 10) - 0.5) * 8.0 + 6.0;
+    }
+
+    function getSurfaceHeight(x, z) {
+      const riverZ = getRiverCenterZ(x);
+      const distToRiver = Math.abs(z - riverZ);
+
+      let h = smoothNoise(x * 0.055, z * 0.055) * 6.5 + smoothNoise(x * 0.15, z * 0.15) * 1.8 + 4.5;
+
+      const mtnNoise = smoothNoise(x * 0.04, z * 0.04);
+      const northRidge = Math.max(0, (-z - 3) * 0.75);
+      if (northRidge > 0 || mtnNoise > 0.62) {
+        const peakBoost = northRidge + Math.max(0, (mtnNoise - 0.58) * 24);
+        h += peakBoost;
+      }
+
+      if (distToRiver < 3.2) {
+        return 2;
+      } else if (distToRiver < 5.2) {
+        const bankBlend = (distToRiver - 3.2) / 2.0;
+        h = 3 + (h - 3) * bankBlend;
+      }
+
+      return Math.max(2, Math.min(20, Math.floor(h)));
+    }
+
+    function generateChunk(cx, cz) {
+      const ck = `${cx},${cz}`;
+      if (chunks.has(ck)) return chunks.get(ck);
+      const map = new Map();
+      const sx = cx * CHUNK_SIZE, sz = cz * CHUNK_SIZE;
+
+      for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+        for (let lz = 0; lz < CHUNK_SIZE; lz++) {
+          const x = sx + lx, z = sz + lz;
+          const h = getSurfaceHeight(x, z);
+          const distToRiver = Math.abs(z - getRiverCenterZ(x));
+
+          for (let y = 0; y <= h; y++) {
+            let id = 4;
+            if (y === 0) id = 20;
+            else if (y === h) {
+              if (h >= 15) id = 39;
+              else if (h >= 11) id = 4;
+              else if (h <= WATER_LEVEL || distToRiver < 4.5) id = 8;
+              else id = 1;
+            } else if (y >= h - 2) {
+              id = (h >= 11) ? 4 : ((h <= WATER_LEVEL || distToRiver < 4.5) ? 8 : 2);
+            } else {
+              const r = hash3(x, y, z);
+              if (y <= 6 && r < 0.045) id = 13;
+              else if (y <= 8 && r < 0.065) id = 12;
+              else if (y <= 11 && r < 0.12) id = 11;
+              else if (r < 0.17) id = 10;
+            }
+            map.set(`${lx},${y},${lz}`, id);
+          }
+
+          for (let y = h + 1; y <= WATER_LEVEL; y++) {
+            map.set(`${lx},${y},${lz}`, 21);
+          }
+
+          if (h >= 12 && lx >= 1 && lx <= CHUNK_SIZE - 2 && lz >= 1 && lz <= CHUNK_SIZE - 2) {
+            const southH = getSurfaceHeight(x, z + 1);
+            if (southH <= h - 3 && hash2(x * 1.9, z * 1.9) < 0.35) {
+              for (let wy = southH + 1; wy <= h; wy++) {
+                map.set(`${lx},${wy},${lz+1}`, 21);
+              }
+              waterfallMist.push({ x: x + 0.5, y: southH + 1.2, z: z + 1.5 });
+            }
+          }
+
+          if (h > WATER_LEVEL && h < 11 && distToRiver >= 4.5) {
+            const grassRoll = hash2(x * 5.7, z * 5.7);
+            if (grassRoll < 0.24 && (Math.abs(x) > 2 || Math.abs(z) > 2)) {
+              map.set(`${lx},${h+1},${lz}`, grassRoll < 0.04 ? 34 : 15);
+            }
+          }
+
+          if (h > WATER_LEVEL + 1 && h < 11 && distToRiver >= 5.0 && lx >= 2 && lx <= CHUNK_SIZE - 3 && lz >= 2 && lz <= CHUNK_SIZE - 3) {
+            if (Math.abs(x) > 3 || Math.abs(z) > 3) {
+              const tr = hash2(x * 3.1, z * 3.1);
+              if (tr < 0.055) {
+                const th = 4 + (hash2(x, z) > 0.5 ? 1 : 0);
+                for (let ty = 1; ty <= th; ty++) map.set(`${lx},${h+ty},${lz}`, 5);
+
+                for (let ox = -2; ox <= 2; ox++) {
+                  for (let oz = -2; oz <= 2; oz++) {
+                    const dist = Math.abs(ox) + Math.abs(oz);
+                    for (let oy = th - 1; oy <= th + 2; oy++) {
+                      if (oy === th + 2 && dist > 1) continue;
+                      if (oy === th + 1 && dist > 2) continue;
+                      if (dist === 4 && oy === th - 1 && hash3(x+ox, oy, z+oz) < 0.4) continue;
+                      if (ox === 0 && oz === 0 && oy <= th) continue;
+                      map.set(`${lx+ox},${h+oy},${lz+oz}`, 6);
+                    }
+
+                    const isOuterEdge = Math.abs(ox) === 2 || Math.abs(oz) === 2;
+                    if (isOuterEdge && dist <= 3 && hash2(x + ox * 7, z + oz * 7) < 0.55) {
+                      const vineLen = 2 + (hash2(x + ox, z + oz) * 2 | 0);
+                      for (let vy = 1; vy <= vineLen; vy++) {
+                        const targetY = h + (th - 1) - vy;
+                        if (targetY > h + 1 && !map.has(`${lx+ox},${targetY},${lz+oz}`)) {
+                          map.set(`${lx+ox},${targetY},${lz+oz}`, 14);
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      chunks.set(ck, map);
+      return map;
+    }
+
+    function getBlock(x, y, z) {
+      const bx = Math.floor(x), by = Math.floor(y), bz = Math.floor(z);
+      if (by < 0) return 20;
+      const ek = `${bx},${by},${bz}`;
+      if (editedBlocks.has(ek)) return editedBlocks.get(ek);
+      const cx = Math.floor(bx / CHUNK_SIZE), cz = Math.floor(bz / CHUNK_SIZE);
+      const ch = generateChunk(cx, cz);
+      const lx = ((bx % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+      const lz = ((bz % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
+      return ch.get(`${lx},${by},${lz}`) || 0;
+    }
+
+    function setBlock(x, y, z, id) {
+      const bx = Math.floor(x), by = Math.floor(y), bz = Math.floor(z);
+      editedBlocks.set(`${bx},${by},${bz}`, id);
+      const cx = Math.floor(bx / CHUNK_SIZE), cz = Math.floor(bz / CHUNK_SIZE);
+      rebuildChunkMesh(cx, cz);
+      [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dz]) => {
+        const nk = `${cx+dx},${cz+dz}`;
+        if (!chunkQueue.includes(nk)) chunkQueue.push(nk);
+      });
+    }
+
+    function isSolid(x, y, z) {
+      const id = getBlock(x, y, z);
+      return id !== 0 && !ITEMS[id]?.nonSolid;
+    }
+
+    function rebuildChunkMesh(cx, cz) {
+      const ck = `${cx},${cz}`;
+      if (chunkMeshes.has(ck)) {
+        scene.remove(chunkMeshes.get(ck));
+        chunkMeshes.delete(ck);
+      }
+      generateChunk(cx, cz);
+      const sx = cx * CHUNK_SIZE, sz = cz * CHUNK_SIZE;
+      const buckets = {};
+
+      for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+        for (let lz = 0; lz < CHUNK_SIZE; lz++) {
+          const x = sx + lx, z = sz + lz;
+          for (let y = 0; y <= 23; y++) {
+            const id = getBlock(x, y, z);
+            if (id === 0 || !ITEMS[id]?.isBlock) continue;
+
+            if (ITEMS[id].isCrossQuad) {
+              if (!buckets[id]) buckets[id] = [];
+              buckets[id].push([x + 0.5, y + 0.5, z + 0.5]);
+              continue;
+            }
+
+            const dirs = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+            let exposed = false;
+            for (let d = 0; d < 6; d++) {
+              const nid = getBlock(x+dirs[d][0], y+dirs[d][1], z+dirs[d][2]);
+              if (nid === 0 || (ITEMS[nid]?.nonSolid && nid !== id) || nid === 18) { exposed = true; break; }
+            }
+            if (exposed) {
+              if (!buckets[id]) buckets[id] = [];
+              buckets[id].push([x + 0.5, y + (id === 21 ? 0.44 : 0.5), z + 0.5]);
+            }
+          }
+        }
+      }
+
+      const group = new THREE.Group();
+      for (const id in buckets) {
+        const list = buckets[id];
+        const numId = Number(id);
+        const def = ITEMS[numId];
+        const geo = def.isCrossQuad ? crossQuadGeo : (numId === 21 ? waterGeo : boxGeo);
+        const im = new THREE.InstancedMesh(geo, def.mats, list.length);
+        if (numId === 21 || numId === 18) im.renderOrder = 2;
+        for (let i = 0; i < list.length; i++) {
+          dummy.position.set(list[i][0], list[i][1], list[i][2]);
+          dummy.updateMatrix();
+          im.setMatrixAt(i, dummy.matrix);
+        }
+        im.instanceMatrix.needsUpdate = true;
+        group.add(im);
+      }
+      scene.add(group);
+      chunkMeshes.set(ck, group);
+    }
+
+    function spawnLootDrop(x, y, z, itemId, count = 1) {
+      const def = ITEMS[itemId];
+      if (!def) return;
+      for (let c = 0; c < count; c++) {
+        let mat = def.mats;
+        if (!mat || def.isCrossQuad) {
+          mat = new THREE.MeshLambertMaterial({ map: new THREE.CanvasTexture(def.icon), transparent: true });
+        }
+        const geo = def.isBlock && !def.isCrossQuad
+          ? new THREE.BoxGeometry(0.28, 0.28, 0.28)
+          : new THREE.BoxGeometry(0.34, 0.34, 0.1);
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(x + 0.5, y + 0.55, z + 0.5);
+        scene.add(mesh);
+        lootDrops.push({
+          mesh,
+          itemId,
+          vx: (Math.random() - 0.5) * 3.6,
+          vy: 3.2 + Math.random() * 1.8,
+          vz: (Math.random() - 0.5) * 3.6,
+          age: 0
+        });
+      }
+    }
+
+    function openStarterChest(bx, by, bz) {
+      setBlock(bx, by, bz, 0);
+      AudioEngine.playWoodCut(true);
+      spawnParticles(bx, by, bz, 5, 12);
+      spawnLootDrop(bx, by, bz, 48, 1);
+      spawnLootDrop(bx, by, bz, 43, 3);
+      spawnLootDrop(bx, by, bz, 5, 3);
+      spawnLootDrop(bx, by, bz, 29, 2);
+      showBriefItemLabel('Starter Chest Opened!');
+    }
+
+    function updateAnimatedObjects(dt) {
+      for (let i = animatedBlocks.length - 1; i >= 0; i--) {
+        const ab = animatedBlocks[i];
+        ab.t += dt * 7;
+        const s = Math.min(1, 1 - Math.pow(1 - Math.min(1, ab.t), 3));
+        ab.mesh.scale.set(s, s, s);
+        if (ab.t >= 1) {
+          scene.remove(ab.mesh);
+          animatedBlocks.splice(i, 1);
+        }
+      }
+
+      if (waterfallMist.length > 0 && Math.random() < 0.35) {
+        const wf = waterfallMist[Math.floor(Math.random() * waterfallMist.length)];
+        if (Math.hypot(player.x - wf.x, player.z - wf.z) < 22) {
+          spawnParticles(wf.x - 0.5, wf.y, wf.z - 0.5, 39, 1);
+        }
+      }
+
+      for (let i = lootDrops.length - 1; i >= 0; i--) {
+        const d = lootDrops[i];
+        d.age += dt;
+        d.mesh.rotation.y += dt * 2.8;
+
+        d.vy -= 18 * dt;
+        const nx = d.mesh.position.x + d.vx * dt;
+        const ny = d.mesh.position.y + d.vy * dt;
+        const nz = d.mesh.position.z + d.vz * dt;
+
+        if (!isSolid(nx, d.mesh.position.y, d.mesh.position.z)) d.mesh.position.x = nx;
+        else d.vx *= -0.5;
+
+        if (!isSolid(d.mesh.position.x, d.mesh.position.y, nz)) d.mesh.position.z = nz;
+        else d.vz *= -0.5;
+
+        if (!isSolid(d.mesh.position.x, ny - 0.18, d.mesh.position.z)) {
+          d.mesh.position.y = ny;
+        } else {
+          if (d.vy < -1.5) d.vy = -d.vy * 0.42;
+          else d.vy = 0;
+          d.vx *= Math.pow(0.02, dt);
+          d.vz *= Math.pow(0.02, dt);
+          d.mesh.position.y = Math.floor(d.mesh.position.y) + 0.22 + Math.sin(d.age * 4) * 0.04;
+        }
+
+        const dx = player.x - d.mesh.position.x;
+        const dy = (player.y + 0.9) - d.mesh.position.y;
+        const dz = player.z - d.mesh.position.z;
+        const dist = Math.hypot(dx, dy, dz);
+
+        if (dist < 2.6 && d.age > 0.25) {
+          d.mesh.position.x += dx * dt * 11;
+          d.mesh.position.y += dy * dt * 11;
+          d.mesh.position.z += dz * dt * 11;
+        }
+        if ((dist < 0.75 && d.age > 0.25) || d.age > 35) {
+          if (dist < 0.75) {
+            AudioEngine.pickupPop();
+            State.inv[d.itemId] = (State.inv[d.itemId] || 0) + 1;
+            addXP(8);
+            if (!State.hotbar.includes(d.itemId)) {
+              const emp = State.hotbar.findIndex(id => (State.inv[id] || 0) <= 0);
+              if (emp !== -1) State.hotbar[emp] = d.itemId;
+            }
+            showBriefItemLabel(`+1 ${ITEMS[d.itemId]?.name || 'Item'}`);
+            renderMenus();
+          }
+          scene.remove(d.mesh);
+          lootDrops.splice(i, 1);
+        }
+      }
+    }
+
+    // =========================================================================
+    // 6. ANATOMICAL ANIMALS & ZOMBIES WITH OBSTACLE-JUMPING PHYSICS
+    // =========================================================================
+    const mobs = [];
+
+    function createJointLimb(w, h, d, mat, x, y, z, hoofMat = null) {
+      const pivot = new THREE.Group();
+      pivot.position.set(x, y, z);
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+      mesh.position.y = -h / 2;
+      pivot.add(mesh);
+      if (hoofMat) {
+        const hoof = new THREE.Mesh(new THREE.BoxGeometry(w + 0.01, 0.09, d + 0.01), hoofMat);
+        hoof.position.y = -h + 0.045;
+        pivot.add(hoof);
+      }
+      return pivot;
+    }
+
+    function spawnMob(type, x, z) {
+      if (Config.difficulty === 'PEACEFUL' && (type === 'zombie' || type === 'creeper')) type = 'pig';
+      const group = new THREE.Group();
+      const headPivot = new THREE.Group();
+      const legs = [];
+      const arms = [];
+      const hostile = type === 'zombie' || type === 'creeper';
+      const darkHoof = new THREE.MeshLambertMaterial({ color: 0x261c15 });
+
+      if (type === 'zombie') {
+        const mSkin = fastMat(TexAssets.zombieSkin);
+        const mFace = fastMat(TexAssets.zombieFace);
+        const mShirt = fastMat(TexAssets.zombieShirt);
+        const mPants = fastMat(TexAssets.zombiePants);
+
+        headPivot.position.set(0, 1.38, 0);
+        const head = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.48, 0.48), [mSkin, mSkin, mSkin, mSkin, mFace, mSkin]);
+        head.position.y = 0.24;
+        headPivot.add(head);
+
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.68, 0.26), mShirt);
+        body.position.y = 1.02;
+
+        const armL = createJointLimb(0.2, 0.64, 0.2, mSkin, -0.34, 1.32, 0);
+        const armR = createJointLimb(0.2, 0.64, 0.2, mSkin,  0.34, 1.32, 0);
+        armL.rotation.x = -Math.PI * 0.45;
+        armR.rotation.x = -Math.PI * 0.45;
+        arms.push(armL, armR);
+
+        const legL = createJointLimb(0.22, 0.66, 0.22, mPants, -0.13, 0.66, 0, darkHoof);
+        const legR = createJointLimb(0.22, 0.66, 0.22, mPants,  0.13, 0.66, 0, darkHoof);
+        legs.push(legL, legR);
+
+        group.add(headPivot, body, armL, armR, legL, legR);
+
+      } else if (type === 'creeper') {
+        const mSkin = fastMat(TexAssets.creeperSkin);
+        const mFace = fastMat(TexAssets.creeperFace);
+
+        headPivot.position.set(0, 1.18, 0);
+        const head = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.48, 0.48), [mSkin, mSkin, mSkin, mSkin, mFace, mSkin]);
+        head.position.y = 0.24;
+        headPivot.add(head);
+
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.72, 0.26), mSkin);
+        body.position.y = 0.82;
+
+        [[-0.16, 0.44, 0.22], [0.16, 0.44, 0.22], [-0.16, 0.44, -0.22], [0.16, 0.44, -0.22]].forEach(([lx,ly,lz]) => {
+          const l = createJointLimb(0.2, 0.44, 0.2, mSkin, lx, ly, lz, darkHoof);
+          group.add(l); legs.push(l);
+        });
+        group.add(headPivot, body);
+
+      } else if (type === 'pig') {
+        const mSkin = fastMat(TexAssets.pigSkin);
+        const mFace = fastMat(TexAssets.pigFace);
+        const mSnout = fastMat(TexAssets.pigSnout);
+
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.54, 0.94), mSkin);
+        body.position.y = 0.58;
+
+        headPivot.position.set(0, 0.68, 0.46);
+        const head = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.46, 0.46), [mSkin, mSkin, mSkin, mSkin, mFace, mSkin]);
+        head.position.set(0, 0.06, 0.18);
+        const snout = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.18, 0.12), mSnout);
+        snout.position.set(0, -0.04, 0.44);
+        const earL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.18, 0.14), mSkin);
+        earL.position.set(-0.25, 0.16, 0.18); earL.rotation.z = 0.25;
+        const earR = earL.clone(); earR.position.x = 0.25; earR.rotation.z = -0.25;
+        headPivot.add(head, snout, earL, earR);
+
+        [[-0.2, 0.34, 0.3], [0.2, 0.34, 0.3], [-0.2, 0.34, -0.3], [0.2, 0.34, -0.3]].forEach(([lx,ly,lz]) => {
+          const l = createJointLimb(0.18, 0.34, 0.18, mSkin, lx, ly, lz, darkHoof);
+          group.add(l); legs.push(l);
+        });
+        group.add(body, headPivot);
+
+      } else if (type === 'sheep') {
+        const mWool = fastMat(TexAssets.sheepWool);
+        const mFace = fastMat(TexAssets.sheepFace);
+        const mSkin = new THREE.MeshLambertMaterial({ color: 0xd4bfa8 });
+
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.62, 1.0), mWool);
+        body.position.y = 0.66;
+
+        headPivot.position.set(0, 0.82, 0.48);
+        const head = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.42, 0.46), [mSkin, mSkin, mWool, mSkin, mFace, mSkin]);
+        head.position.set(0, 0.04, 0.18);
+        const crownWool = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.16, 0.46), mWool);
+        crownWool.position.set(0, 0.22, 0.16);
+        headPivot.add(head, crownWool);
+
+        [[-0.2, 0.4, 0.3], [0.2, 0.4, 0.3], [-0.2, 0.4, -0.3], [0.2, 0.4, -0.3]].forEach(([lx,ly,lz]) => {
+          const l = createJointLimb(0.18, 0.4, 0.18, mSkin, lx, ly, lz, darkHoof);
+          group.add(l); legs.push(l);
+        });
+        group.add(body, headPivot);
+
+      } else {
+        const mHide = fastMat(TexAssets.cowHide);
+        const mFace = fastMat(TexAssets.cowFace);
+        const mHorn = new THREE.MeshLambertMaterial({ color: 0xd9d2c5 });
+        const mUdder = new THREE.MeshLambertMaterial({ color: 0xf0a8b0 });
+
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.64, 1.06), mHide);
+        body.position.y = 0.74;
+        const udder = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.12, 0.38), mUdder);
+        udder.position.set(0, 0.4, -0.15);
+
+        headPivot.position.set(0, 0.9, 0.52);
+        const head = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.48, 0.46), [mHide, mHide, mHide, mHide, mFace, mHide]);
+        head.position.set(0, 0.05, 0.18);
+        const hornL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.2, 0.08), mHorn);
+        hornL.position.set(-0.25, 0.28, 0.14);
+        const hornR = hornL.clone(); hornR.position.x = 0.25;
+        headPivot.add(head, hornL, hornR);
+
+        [[-0.22, 0.44, 0.34], [0.22, 0.44, 0.34], [-0.22, 0.44, -0.34], [0.22, 0.44, -0.34]].forEach(([lx,ly,lz]) => {
+          const l = createJointLimb(0.2, 0.44, 0.2, mHide, lx, ly, lz, darkHoof);
+          group.add(l); legs.push(l);
+        });
+        group.add(body, udder, headPivot);
+      }
+
+      const sy = getSurfaceHeight(Math.floor(x), Math.floor(z)) + 1;
+      group.position.set(x, sy, z);
+      scene.add(group);
+
+      mobs.push({
+        type, hostile, hp: hostile ? 14 : 9, group, headPivot, legs, arms,
+        vy: 0, onGround: true,
+        phase: Math.random() * 6.28, angle: Math.random() * 6.28, targetAngle: Math.random() * 6.28,
+        headPitch: 0, behavior: 'WANDER', timer: 2 + Math.random() * 3, panicTimer: 0, kx: 0, kz: 0
+      });
+    }
+
+    function damageMob(m, idx, dmg, knockX, knockZ) {
+      m.hp -= dmg;
+      m.kx = knockX;
+      m.kz = knockZ;
+      m.vy = 4.2;
+      m.onGround = false;
+      if (!m.hostile) {
+        m.panicTimer = 3.5;
+        m.targetAngle = Math.atan2(m.group.position.x - player.x, m.group.position.z - player.z);
+      }
+      spawnParticles(m.group.position.x, m.group.position.y + 0.6, m.group.position.z, 19, 8);
+
+      if (m.hp <= 0) {
+        const mx = m.group.position.x - 0.5, my = m.group.position.y, mz = m.group.position.z - 0.5;
+        if (m.type === 'pig') spawnLootDrop(mx, my, mz, 35, 2);
+        else if (m.type === 'sheep') { spawnLootDrop(mx, my, mz, 38, 1); spawnLootDrop(mx, my, mz, 35, 1); }
+        else if (m.type === 'cow') { spawnLootDrop(mx, my, mz, 35, 2); spawnLootDrop(mx, my, mz, 37, 1); }
+        else if (m.type === 'creeper') spawnLootDrop(mx, my, mz, 41, 2);
+        else spawnLootDrop(mx, my, mz, 11, 1);
+        scene.remove(m.group);
+        mobs.splice(idx, 1);
+        addXP(25);
+      }
+    }
+
+    function updateMobs(dt, now) {
+      if (mobs.length < 7 && Math.random() < 0.025) {
+        const ang = Math.random() * 6.28, dist = 10 + Math.random() * 10;
+        const types = ['pig', 'sheep', 'cow', 'zombie', 'creeper'];
+        spawnMob(types[Math.floor(Math.random()*types.length)], player.x + Math.sin(ang)*dist, player.z + Math.cos(ang)*dist);
+      }
+
+      for (let i = mobs.length - 1; i >= 0; i--) {
+        const m = mobs[i];
+        const dx = player.x - m.group.position.x, dz = player.z - m.group.position.z;
+        const dist = Math.hypot(dx, dz);
+        if (dist > 30) { scene.remove(m.group); mobs.splice(i, 1); continue; }
+
+        let moveSpeed = 0;
+        if (m.hostile && dist < 12 && player.mode !== 'CREATIVE' && Config.difficulty !== 'PEACEFUL') {
+          m.targetAngle = Math.atan2(dx, dz);
+          moveSpeed = 2.15;
+          m.headPitch = Math.max(-0.4, Math.min(0.4, ((player.y + 1.2) - (m.group.position.y + 1.3)) * 0.25));
+          if (dist < 1.35 && m.timer <= 0) {
+            damagePlayer(2, m.group.position.x, m.group.position.z);
+            m.timer = 1.25;
+          }
+          m.timer -= dt;
+        } else if (m.panicTimer > 0) {
+          m.panicTimer -= dt;
+          moveSpeed = 3.2;
+          m.headPitch = -0.15;
+        } else {
+          m.timer -= dt;
+          if (m.timer <= 0) {
+            if (Math.random() < 0.55) {
+              m.behavior = 'WANDER';
+              m.targetAngle += (Math.random() - 0.5) * 2.2;
+              m.headPitch = 0;
+            } else {
+              m.behavior = 'GRAZE';
+              m.headPitch = 0.6;
+            }
+            m.timer = 2.0 + Math.random() * 2.5;
+          }
+          if (m.behavior === 'WANDER') moveSpeed = 1.05;
+        }
+
+        m.angle += (m.targetAngle - m.angle) * Math.min(1, dt * 8);
+        m.group.rotation.y = m.angle;
+        m.headPivot.rotation.x += (m.headPitch - m.headPivot.rotation.x) * Math.min(1, dt * 8);
+        m.kx *= Math.pow(0.04, dt);
+        m.kz *= Math.pow(0.04, dt);
+
+        if (m.arms.length === 2) {
+          m.arms[0].rotation.x = -Math.PI * 0.45 + Math.sin(now * 0.006 + m.phase) * 0.16;
+          m.arms[1].rotation.x = -Math.PI * 0.45 - Math.sin(now * 0.006 + m.phase) * 0.16;
+        }
+
+        m.vy -= 20.0 * dt;
+        m.group.position.y += m.vy * dt;
+        const curGround = getSurfaceHeight(Math.floor(m.group.position.x), Math.floor(m.group.position.z)) + 1;
+        if (m.group.position.y <= curGround) {
+          m.group.position.y = curGround;
+          m.vy = 0;
+          m.onGround = true;
+        }
+
+        const nx = m.group.position.x + (Math.sin(m.angle) * moveSpeed + m.kx) * dt;
+        const nz = m.group.position.z + (Math.cos(m.angle) * moveSpeed + m.kz) * dt;
+        const targetGround = getSurfaceHeight(Math.floor(nx), Math.floor(nz)) + 1;
+
+        if (targetGround > WATER_LEVEL) {
+          if (targetGround <= m.group.position.y + 0.1) {
+            m.group.position.x = nx;
+            m.group.position.z = nz;
+          } else if (targetGround - m.group.position.y <= 1.2 && m.onGround) {
+            m.vy = 6.6;
+            m.onGround = false;
+            m.group.position.x = nx;
+            m.group.position.z = nz;
+          } else {
+            m.targetAngle += Math.PI * 0.6;
+          }
+        }
+
+        if (moveSpeed > 0.1) {
+          m.phase += dt * (moveSpeed * 5.2);
+          m.legs.forEach((leg, idx) => leg.rotation.x = Math.sin(m.phase + (idx % 2) * Math.PI) * 0.62);
+        } else {
+          m.legs.forEach(leg => leg.rotation.x *= Math.pow(0.05, dt));
+        }
+      }
+    }
+
+    function explodeAt(bx, by, bz) {
+      AudioEngine.explode();
+      spawnParticles(bx, by, bz, 19, 18);
+      for (let dx = -2; dx <= 2; dx++) for (let dy = -2; dy <= 2; dy++) for (let dz = -2; dz <= 2; dz++) {
+        if (dx*dx + dy*dy + dz*dz <= 5) {
+          const id = getBlock(bx+dx, by+dy, bz+dz);
+          if (id !== 0 && id !== 20) setBlock(bx+dx, by+dy, bz+dz, 0);
+        }
+      }
+    }
+
+    // =========================================================================
+    // 7. SUB-STEPPED PLAYER PHYSICS, CRACK OVERLAY & ACTIONS
+    // =========================================================================
+    const player = {
+      x: 0.5, y: 14, z: 0.5,
+      vx: 0, vy: 0, vz: 0,
+      yaw: 0, pitch: 0,
+      targetYaw: 0, targetPitch: 0,
+      rollTilt: 0,
+      radius: 0.32, height: 1.72, eye: 1.55,
+      onGround: false, flyMode: false, sprinting: false, thirdPerson: false,
+      mode: 'SURVIVAL',
+      hp: 10, hunger: 10, oxygen: 10,
+      stepAccum: 0, breathTimer: 0, hungerClock: 0, regenClock: 0,
+      eatingAnim: 0
+    };
+
+    let selectedSlot = 0;
+    let handGroup = null;
+    let swingProg = 0, isSwinging = false, bobTime = 0;
+    let labelTimeout = null;
+
+    function getEquippedId() { return State.hotbar[selectedSlot] || 1; }
+
+    function showBriefItemLabel(text) {
+      const el = document.getElementById('fade-item-label');
+      el.textContent = text;
+      el.classList.add('visible');
+      clearTimeout(labelTimeout);
+      labelTimeout = setTimeout(() => el.classList.remove('visible'), 1500);
+    }
+
+    function buildHeld3DMesh() {
+      if (handGroup) handScene.remove(handGroup);
+      handGroup = new THREE.Group();
+      const id = getEquippedId();
+      const def = ITEMS[id];
+
+      const armSleeve = new THREE.Mesh(
+        new THREE.BoxGeometry(0.18, 0.25, 0.22),
+        fastMat(TexAssets.playerShirt)
+      );
+      armSleeve.position.set(0.12, -0.28, 0.22);
+      armSleeve.rotation.x = -0.6;
+      const armHand = new THREE.Mesh(
+        new THREE.BoxGeometry(0.16, 0.28, 0.16),
+        fastMat(TexAssets.playerSkin)
+      );
+      armHand.position.set(0.1, -0.14, 0.05);
+      armHand.rotation.x = -0.6;
+      handGroup.add(armSleeve, armHand);
+
+      if (!def) {
+        handScene.add(handGroup);
+        return;
+      }
+
+      if (def.isBlock && !def.isCrossQuad) {
+        const bMesh = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.42, 0.42), def.mats);
+        bMesh.position.set(-0.04, 0.05, -0.12);
+        handGroup.add(bMesh);
+      } else if (def.pick || def.isSword) {
+        const hMat = new THREE.MeshLambertMaterial({ color: 0x7a4b24 });
+        const mMat = new THREE.MeshLambertMaterial({ color: def.headCol || 0xcccccc });
+        const stick = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.65, 0.08), hMat);
+        handGroup.add(stick);
+        if (def.isSword) {
+          const blade = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.55, 0.06), mMat); blade.position.y = 0.35;
+          const guard = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.07, 0.09), hMat); guard.position.y = 0.08;
+          handGroup.add(blade, guard);
+        } else {
+          const head = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.12, 0.1), mMat); head.position.y = 0.28;
+          handGroup.add(head);
+        }
+      } else {
+        const mat = new THREE.MeshLambertMaterial({ map: new THREE.CanvasTexture(def.icon), transparent: true });
+        const itemPlate = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.42, 0.12), mat);
+        itemPlate.position.set(-0.04, 0.08, -0.1);
+        handGroup.add(itemPlate);
+      }
+      handScene.add(handGroup);
+    }
+
+    function updateVitals() {
+      const hb = document.getElementById('hearts-bar');
+      const fb = document.getElementById('hunger-bar');
+      const ab = document.getElementById('armor-bar');
+      const ob = document.getElementById('oxygen-bar');
+
+      let hHtml = '', fHtml = '', aHtml = '', oHtml = '';
+      for (let i = 0; i < 10; i++) {
+        const hCol = i < player.hp ? '#ff3b47' : 'rgba(255,255,255,0.2)';
+        const fCol = i < player.hunger ? '#d9822b' : 'rgba(255,255,255,0.2)';
+        hHtml += `<svg class="vital-svg" style="fill:${hCol}"><use href="#ic-heart"/></svg>`;
+        fHtml += `<svg class="vital-svg" style="fill:${fCol}"><use href="#ic-hunger"/></svg>`;
+
+        if (State.armorDefense > 0) {
+          const aCol = i < State.armorDefense ? '#4ff3ff' : 'rgba(255,255,255,0.18)';
+          aHtml += `<svg class="vital-svg" style="fill:${aCol}"><use href="#ic-shield"/></svg>`;
+        }
+        if (player.oxygen < 10) {
+          const oCol = i < player.oxygen ? '#33ccff' : 'rgba(255,255,255,0.12)';
+          oHtml += `<svg class="vital-svg" style="color:${oCol}"><use href="#ic-bubble"/></svg>`;
+        }
+      }
+      hb.innerHTML = hHtml; fb.innerHTML = fHtml; ab.innerHTML = aHtml; ob.innerHTML = oHtml;
+    }
+
+    function equipArmorItem(id) {
+      const def = ITEMS[id];
+      if (!def || !def.isArmor) return;
+      State.armorDefense = def.defense;
+      avatar.armorPlate.visible = true;
+      avatar.armorPlate.material.color.setHex(def.armorCol);
+      document.getElementById('lbl-armor-tier').textContent = `${def.name} (${def.defense * 7}% Reduction)`;
+      AudioEngine.playCraft();
+      updateVitals();
+    }
+
+    function damagePlayer(dmg, srcX = null, srcZ = null) {
+      if (player.mode === 'CREATIVE' || player.flyMode) return;
+      const reduction = 1 - (State.armorDefense * 0.065);
+      const finalDmg = Math.max(1, Math.round(dmg * reduction));
+      player.hp = Math.max(0, player.hp - finalDmg);
+      AudioEngine.hurt();
+      player.rollTilt = 0.16;
+      if (srcX !== null && srcZ !== null) {
+        const ang = Math.atan2(player.x - srcX, player.z - srcZ);
+        player.vx += Math.sin(ang) * 6.5;
+        player.vz += Math.cos(ang) * 6.5;
+        player.vy = 4.2;
+        player.onGround = false;
+      }
+      updateVitals();
+      const fx = document.getElementById('screen-fx');
+      fx.style.background = 'rgba(255, 0, 0, 0.32)';
+      setTimeout(() => { fx.style.background = 'transparent'; }, 220);
+      if (player.hp <= 0) openModal('page-death');
+    }
+
+    function sleepInBed(bx, by, bz) {
+      State.spawnX = bx + 0.5; State.spawnY = by + 1.2; State.spawnZ = bz + 0.5;
+      const fx = document.getElementById('screen-fx');
+      fx.style.background = 'rgba(5, 8, 18, 0.95)';
+      setTimeout(() => {
+        worldTime = 6.5;
+        player.hp = 10; player.hunger = 10;
+        updateVitals();
+        fx.style.background = 'transparent';
+        showBriefItemLabel('Slept Until Dawn');
+      }, 600);
+    }
+
+    function hitOrEatAction() {
+      isSwinging = true; swingProg = 0;
+      const eqId = getEquippedId();
+      const def = ITEMS[eqId];
+
+      if (def?.isArmor) { equipArmorItem(eqId); return; }
+
+      if (def?.isFood && (State.inv[eqId] || 0) > 0 && (player.hp < 10 || player.hunger < 10 || def.bonusShield)) {
+        State.inv[eqId]--;
+        player.hp = Math.min(10, player.hp + (def.heal || 2));
+        player.hunger = Math.min(10, player.hunger + (def.hunger || 2));
+        if (def.bonusShield) {
+          State.armorDefense = Math.min(10, State.armorDefense + def.bonusShield);
+        }
+        player.eatingAnim = 0.45;
+        AudioEngine.eatCrunch();
+        const dir = new THREE.Vector3(0, 0, -1).applyEuler(new THREE.Euler(player.pitch, player.yaw, 0, 'YXZ'));
+        spawnParticles(player.x + dir.x * 0.6 - 0.5, player.y + player.eye - 0.3, player.z + dir.z * 0.6 - 0.5, eqId, 6);
+        updateVitals();
+        renderMenus();
+        showBriefItemLabel(`Ate ${def.name}`);
+        return;
+      }
+
+      const dir = new THREE.Vector3(0, 0, -1).applyEuler(new THREE.Euler(player.pitch, player.yaw, 0, 'YXZ'));
+      const dmg = def?.dmg || 2;
+      let hitTarget = false;
+
+      for (let i = mobs.length - 1; i >= 0; i--) {
+        const m = mobs[i];
+        const toMob = new THREE.Vector3(
+          m.group.position.x - player.x,
+          (m.group.position.y + 0.7) - (player.y + player.eye),
+          m.group.position.z - player.z
+        );
+        if (toMob.length() < 3.9 && dir.dot(toMob.normalize()) > 0.68) {
+          hitTarget = true;
+          damageMob(m, i, dmg, dir.x * 7.5, dir.z * 7.5);
+          break;
+        }
+      }
+      AudioEngine.attackSwing(hitTarget);
+    }
+
+    const highlightBox = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(1.006, 1.006, 1.006)),
+      new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.65 })
+    );
+    scene.add(highlightBox);
+
+    const crackOverlayMesh = new THREE.Mesh(new THREE.BoxGeometry(1.004, 1.004, 1.004), CrackMats[0]);
+    crackOverlayMesh.visible = false;
+    crackOverlayMesh.renderOrder = 3;
+    scene.add(crackOverlayMesh);
+
+    let targetBlock = null;
+    let miningHeld = false;
+    let miningProgress = 0;
+    let miningKey = '';
+    let hitSoundTimer = 0;
+
+    function updateRaycastAndMining(dt) {
+      const dir = new THREE.Vector3(0, 0, -1).applyEuler(new THREE.Euler(player.pitch, player.yaw, 0, 'YXZ'));
+      const ox = player.x, oy = player.y + player.eye, oz = player.z;
+      let px = Math.floor(ox), py = Math.floor(oy), pz = Math.floor(oz);
+      targetBlock = null;
+
+      for (let d = 0.1; d <= 5.8; d += 0.06) {
+        const cx = Math.floor(ox + dir.x * d), cy = Math.floor(oy + dir.y * d), cz = Math.floor(oz + dir.z * d);
+        const bid = getBlock(cx, cy, cz);
+        if (bid !== 0 && bid !== 21) {
+          targetBlock = { hit: { x: cx, y: cy, z: cz }, place: { x: px, y: py, z: pz } };
+          break;
+        }
+        px = cx; py = cy; pz = cz;
+      }
+
+      const ring = document.getElementById('mining-ring');
+      const fill = document.getElementById('mining-fill');
+
+      if (!targetBlock) {
+        highlightBox.visible = false;
+        crackOverlayMesh.visible = false;
+        ring.style.display = 'none';
+        miningProgress = 0;
+        return;
+      }
+
+      const { x, y, z } = targetBlock.hit;
+      highlightBox.visible = true;
+      highlightBox.position.set(x + 0.5, y + 0.5, z + 0.5);
+
+      if (!miningHeld) {
+        crackOverlayMesh.visible = false;
+        ring.style.display = 'none';
+        miningProgress = 0;
+        return;
+      }
+
+      const key = `${x},${y},${z}`;
+      if (key !== miningKey) { miningKey = key; miningProgress = 0; }
+
+      const blockId = getBlock(x, y, z);
+      const bDef = ITEMS[blockId];
+      if (!bDef || blockId === 20) return;
+
+      isSwinging = true;
+      const eqDef = ITEMS[getEquippedId()];
+      let mult = 1.0;
+      if (player.mode === 'CREATIVE') mult = 16.0;
+      else if (bDef.tool === 'pick' && eqDef?.pick) mult = eqDef.pick;
+      else if (bDef.tool === 'pick' && !eqDef?.pick) mult = 0.5;
+
+      miningProgress += (dt * mult) / bDef.hardness;
+      hitSoundTimer -= dt;
+      if (hitSoundTimer <= 0) {
+        if (bDef.snd === 'wood') AudioEngine.playWoodCut(false);
+        else if (bDef.snd === 'stone') AudioEngine.playStoneCut(false);
+        else AudioEngine.playWalk('grass');
+        hitSoundTimer = 0.19;
+      }
+
+      if (!bDef.isCrossQuad) {
+        const stg = Math.min(7, Math.floor(miningProgress * 8));
+        crackOverlayMesh.material = CrackMats[stg];
+        crackOverlayMesh.position.set(x + 0.5, y + 0.5, z + 0.5);
+        crackOverlayMesh.visible = true;
+      }
+
+      ring.style.display = 'block';
+      fill.style.width = `${Math.min(100, miningProgress * 100)}%`;
+
+      if (miningProgress >= 1.0) {
+        miningProgress = 0;
+        crackOverlayMesh.visible = false;
+        ring.style.display = 'none';
+
+        if (blockId === 46) { openStarterChest(x, y, z); return; }
+        if (blockId === 19) { setBlock(x, y, z, 0); explodeAt(x, y, z); return; }
+
+        setBlock(x, y, z, 0);
+        spawnParticles(x, y, z, blockId, 9);
+
+        if (bDef.snd === 'wood') AudioEngine.playWoodCut(true);
+        else if (bDef.snd === 'stone') AudioEngine.playStoneCut(true);
+        else AudioEngine.playWalk('grass');
+
+        if (blockId === 6) {
+          if (Math.random() < 0.45) spawnLootDrop(x, y, z, 43, 1);
+          if (Math.random() < 0.4) spawnLootDrop(x, y, z, 22, 1);
+        } else {
+          const dropId = bDef.drop || blockId;
+          spawnLootDrop(x, y, z, dropId, 1);
+        }
+      }
+    }
+
+    function placeBlockAction() {
+      isSwinging = true; swingProg = 0;
+      if (targetBlock) {
+        const hitId = getBlock(targetBlock.hit.x, targetBlock.hit.y, targetBlock.hit.z);
+        if (hitId === 30) { sleepInBed(targetBlock.hit.x, targetBlock.hit.y, targetBlock.hit.z); return; }
+        if (hitId === 46) { openStarterChest(targetBlock.hit.x, targetBlock.hit.y, targetBlock.hit.z); return; }
+      }
+
+      if (!targetBlock) { hitOrEatAction(); return; }
+      const eqId = getEquippedId();
+      const def = ITEMS[eqId];
+      if (!def || !def.isBlock) { hitOrEatAction(); return; }
+      if (player.mode !== 'CREATIVE' && (State.inv[eqId] || 0) <= 0) return;
+
+      const { x, y, z } = targetBlock.place;
+      const prev = getBlock(x, y, z);
+      setBlock(x, y, z, eqId);
+      if (!def.nonSolid && checkCollision(player.x, player.y, player.z)) {
+        setBlock(x, y, z, prev);
+        return;
+      }
+
+      if (!def.isCrossQuad) {
+        const animMesh = new THREE.Mesh(boxGeo, def.mats);
+        animMesh.position.set(x + 0.5, y + 0.5, z + 0.5);
+        animMesh.scale.set(0.01, 0.01, 0.01);
+        scene.add(animMesh);
+        animatedBlocks.push({ mesh: animMesh, t: 0 });
+      }
+
+      if (player.mode !== 'CREATIVE') State.inv[eqId]--;
+      if (def.snd === 'wood') AudioEngine.playWoodCut(false);
+      else AudioEngine.playStoneCut(false);
+
+      if (eqId === 30) {
+        State.spawnX = x + 0.5; State.spawnY = y + 1.2; State.spawnZ = z + 0.5;
+        showBriefItemLabel('Bed Placed');
+      }
+      renderMenus();
+    }
+
+    const particles = [];
+    const partGeo = new THREE.BoxGeometry(0.12, 0.12, 0.12);
+    function spawnParticles(bx, by, bz, id, count = 10) {
+      const mat = new THREE.MeshBasicMaterial({ color: ITEMS[id]?.color || '#ffffff' });
+      for (let i = 0; i < count; i++) {
+        const m = new THREE.Mesh(partGeo, mat);
+        m.position.set(bx + 0.2 + Math.random()*0.6, by + 0.2 + Math.random()*0.6, bz + 0.2 + Math.random()*0.6);
+        scene.add(m);
+        particles.push({ mesh: m, vx: (Math.random()-0.5)*4.2, vy: 2 + Math.random()*3.2, vz: (Math.random()-0.5)*4.2, life: 0.4 });
+      }
+    }
+    function updateParticles(dt) {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.life -= dt; p.vy -= 14 * dt;
+        p.mesh.position.x += p.vx * dt;
+        p.mesh.position.y += p.vy * dt;
+        p.mesh.position.z += p.vz * dt;
+        if (p.life <= 0) { scene.remove(p.mesh); particles.splice(i, 1); }
+      }
+    }
+
+    // =========================================================================
+    // 8. UI, ABOUT SECTION & TOP-RIGHT BUTTONS LOGIC
+    // =========================================================================
+    let activeModal = 'page-title';
+
+    function openModal(id) {
+      AudioEngine.uiClick();
+      activeModal = id;
+      document.querySelectorAll('.ui-page').forEach(p => p.classList.add('hidden'));
+      const hud = document.getElementById('hud-layer');
+      if (id) {
+        document.getElementById(id).classList.remove('hidden');
+        hud.classList.add('hidden');
+        if (document.pointerLockElement) document.exitPointerLock();
+        renderMenus();
+      } else {
+        hud.classList.remove('hidden');
+        if (renderer.domElement.requestPointerLock && !('ontouchstart' in window)) {
+          renderer.domElement.requestPointerLock();
+        }
+      }
+    }
+
+    function bindActionBtn(elId, fn) {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      el.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        fn(e);
+      });
+    }
+
+    function toggleCameraPerspective() {
+      player.thirdPerson = !player.thirdPerson;
+      avatar.group.visible = player.thirdPerson;
+      AudioEngine.uiClick();
+      showBriefItemLabel(player.thirdPerson ? '3rd Person View' : '1st Person View');
+    }
+
+    bindActionBtn('top-btn-bag', () => openModal(activeModal === 'page-inventory' ? null : 'page-inventory'));
+    bindActionBtn('hotbar-bag-btn', () => openModal(activeModal === 'page-inventory' ? null : 'page-inventory'));
+    bindActionBtn('top-btn-cam', () => toggleCameraPerspective());
+    bindActionBtn('top-btn-pause', () => openModal(activeModal === 'page-pause' ? null : 'page-pause'));
+
+    bindActionBtn('btn-open-create-world', () => openModal('page-create-world'));
+    bindActionBtn('btn-create-back', () => openModal('page-title'));
+    bindActionBtn('btn-cancel-create', () => openModal('page-title'));
+    bindActionBtn('btn-quick-resume', () => { AudioEngine.init(); openModal(null); });
+    bindActionBtn('btn-open-settings', () => openModal('page-settings'));
+    bindActionBtn('btn-settings-close', () => openModal(null));
+    bindActionBtn('btn-settings-done', () => openModal(null));
+    bindActionBtn('btn-open-about', () => openModal('page-about'));
+    bindActionBtn('btn-pause-about', () => openModal('page-about'));
+    bindActionBtn('btn-about-close', () => openModal('page-title'));
+    bindActionBtn('btn-about-back', () => openModal('page-title'));
+    bindActionBtn('btn-inv-close', () => openModal(null));
+    bindActionBtn('btn-pause-close', () => openModal(null));
+    bindActionBtn('btn-resume', () => openModal(null));
+    bindActionBtn('btn-pause-settings', () => openModal('page-settings'));
+    bindActionBtn('btn-pause-title', () => openModal('page-title'));
+
+    bindActionBtn('btn-cw-mode', e => {
+      const order = ['SURVIVAL', 'CREATIVE'];
+      player.mode = order[(order.indexOf(player.mode) + 1) % order.length];
+      player.flyMode = player.mode === 'CREATIVE';
+      e.currentTarget.textContent = `Mode: ${player.mode}`;
+    });
+
+    bindActionBtn('btn-cw-diff', e => {
+      const order = ['NORMAL', 'HARD', 'PEACEFUL'];
+      Config.difficulty = order[(order.indexOf(Config.difficulty) + 1) % order.length];
+      e.currentTarget.textContent = `Difficulty: ${Config.difficulty}`;
+    });
+
+    bindActionBtn('btn-cw-biome', e => {
+      const order = ['OVERWORLD', 'JUNGLE', 'DESERT'];
+      const labels = { OVERWORLD: 'Mountain & River', JUNGLE: 'Dense Vine Forest', DESERT: 'Golden Desert' };
+      Config.biomePreset = order[(order.indexOf(Config.biomePreset) + 1) % order.length];
+      e.currentTarget.textContent = labels[Config.biomePreset];
+    });
+
+    bindActionBtn('btn-cw-chest', e => {
+      Config.bonusChest = !Config.bonusChest;
+      e.currentTarget.textContent = `Bonus Chest: ${Config.bonusChest ? 'ON' : 'OFF'}`;
+      e.currentTarget.classList.toggle('primary', Config.bonusChest);
+    });
+
+    bindActionBtn('btn-generate-launch', () => {
+      AudioEngine.init();
+      Config.worldName = document.getElementById('inp-world-name').value.trim() || 'Overworld';
+      const rawSeed = document.getElementById('inp-world-seed').value.trim();
+      worldSeed = rawSeed ? (parseInt(rawSeed.replace(/\D/g, ''), 10) || 90210) : (Math.floor(Math.random() * 89999) + 10000);
+
+      chunks.clear();
+      chunkMeshes.forEach(m => scene.remove(m));
+      chunkMeshes.clear();
+      editedBlocks.clear();
+      waterfallMist.length = 0;
+      lootDrops.forEach(d => scene.remove(d.mesh));
+      lootDrops.length = 0;
+
+      rebuildChunkMesh(0, 0);
+      const sy = getSurfaceHeight(0, 0) + 1.5;
+      player.x = 0.5; player.y = sy; player.z = 0.5;
+      player.vx = 0; player.vy = 0; player.vz = 0;
+      State.spawnX = 0.5; State.spawnY = sy; State.spawnZ = 0.5;
+      player.hp = 10; player.hunger = 10; player.oxygen = 10;
+
+      if (Config.bonusChest) {
+        const cy = getSurfaceHeight(0, -2) + 1;
+        setBlock(0, cy, -2, 46);
+      }
+
+      lastChunkX = 9999;
+      updateVitals();
+      openModal(null);
+      showBriefItemLabel(`Created "${Config.worldName}"`);
+    });
+
+    function selectSlot(idx) {
+      selectedSlot = idx;
+      const eqId = getEquippedId();
+      showBriefItemLabel(ITEMS[eqId]?.name || '');
+      buildHeld3DMesh();
+      renderHotbar();
+    }
+
+    function renderHotbar() {
+      const hb = document.getElementById('hotbar');
+      hb.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const id = State.hotbar[i] || 1;
+        const def = ITEMS[id];
+        const qty = player.mode === 'CREATIVE' ? '∞' : (State.inv[id] || 0);
+        const s = document.createElement('div');
+        s.className = 'slot' + (i === selectedSlot ? ' active' : '');
+        s.innerHTML = `<span class="slot-badge">${qty}</span>`;
+        if (def) {
+          const c = document.createElement('canvas'); c.width = 32; c.height = 32;
+          c.getContext('2d').drawImage(def.icon, 0, 0);
+          s.appendChild(c);
+        }
+        s.addEventListener('pointerdown', e => { e.stopPropagation(); selectSlot(i); });
+        hb.appendChild(s);
+      }
+    }
+
+    function canCraft(r) {
+      if (player.mode === 'CREATIVE') return true;
+      return r.cost.every(([id, req]) => (State.inv[id] || 0) >= req);
+    }
+
+    function renderMenus() {
+      renderHotbar();
+
+      const cg = document.getElementById('craft-grid');
+      if (cg) {
+        cg.innerHTML = '';
+        RECIPES.forEach(r => {
+          const ok = canCraft(r);
+          const s = document.createElement('div');
+          s.className = 'slot' + (ok ? ' craftable' : '');
+          s.title = r.title;
+          s.innerHTML = `<span class="slot-badge">+${r.qty}</span>`;
+          const c = document.createElement('canvas'); c.width = 32; c.height = 32;
+          c.getContext('2d').drawImage(ITEMS[r.out].icon, 0, 0);
+          s.appendChild(c);
+          s.addEventListener('pointerdown', e => {
+            e.stopPropagation();
+            if (!canCraft(r)) {
+              showBriefItemLabel(`Need resources for ${r.title}`);
+              return;
+            }
+            if (player.mode !== 'CREATIVE') r.cost.forEach(([cid, req]) => State.inv[cid] -= req);
+            State.inv[r.out] = (State.inv[r.out] || 0) + r.qty;
+            if (ITEMS[r.out]?.isArmor) {
+              equipArmorItem(r.out);
+            } else {
+              State.hotbar[selectedSlot] = r.out;
+              selectSlot(selectedSlot);
+            }
+            AudioEngine.playCraft();
+            renderMenus();
+          });
+          cg.appendChild(s);
+        });
+      }
+
+      const ig = document.getElementById('item-grid');
+      if (ig) {
+        ig.innerHTML = '';
+        Object.keys(ITEMS).forEach(k => {
+          const id = Number(k);
+          if (id === 20 || id === 21) return;
+          const qty = player.mode === 'CREATIVE' ? 64 : (State.inv[id] || 0);
+          if (player.mode !== 'CREATIVE' && qty <= 0 && !State.hotbar.includes(id)) return;
+          const s = document.createElement('div');
+          s.className = 'slot' + (getEquippedId() === id ? ' active' : '');
+          s.innerHTML = `<span class="slot-badge">${player.mode === 'CREATIVE' ? '∞' : qty}</span>`;
+          const c = document.createElement('canvas'); c.width = 32; c.height = 32;
+          c.getContext('2d').drawImage(ITEMS[id].icon, 0, 0);
+          s.appendChild(c);
+          s.addEventListener('pointerdown', e => {
+            e.stopPropagation();
+            if (ITEMS[id]?.isArmor) {
+              equipArmorItem(id);
+            } else {
+              State.hotbar[selectedSlot] = id;
+              selectSlot(selectedSlot);
+            }
+            openModal(null);
+          });
+          ig.appendChild(s);
+        });
+      }
+    }
+
+    bindActionBtn('btn-equip-armor', () => {
+      if ((State.inv[33] || 0) > 0 || player.mode === 'CREATIVE') equipArmorItem(33);
+      else if ((State.inv[32] || 0) > 0) equipArmorItem(32);
+      else if ((State.inv[45] || 0) > 0) equipArmorItem(45);
+      else showBriefItemLabel('Craft Armor First');
+    });
+
+    document.getElementById('rng-music').addEventListener('input', e => Config.musicVolume = Number(e.target.value) / 100);
+    document.getElementById('rng-vol').addEventListener('input', e => Config.volume = Number(e.target.value) / 100);
+    document.getElementById('rng-sens').addEventListener('input', e => Config.sens = Number(e.target.value) / 100);
+    document.getElementById('rng-fog').addEventListener('input', e => {
+      Config.fogFar = Number(e.target.value);
+      scene.fog.far = Config.fogFar;
+    });
+    document.getElementById('rng-fov').addEventListener('input', e => {
+      Config.fov = Number(e.target.value);
+      camera.fov = Config.fov;
+      camera.updateProjectionMatrix();
+    });
+    document.getElementById('rng-res').addEventListener('input', e => {
+      renderer.setPixelRatio(Number(e.target.value) / 100);
+    });
+
+    bindActionBtn('btn-pause-fly', e => {
+      player.flyMode = !player.flyMode; player.vy = 0;
+      e.currentTarget.innerHTML = `<svg class="svg-ic"><use href="#ic-sprint"/></svg> Fly Mode: ${player.flyMode ? 'ON' : 'OFF'}`;
+    });
+
+    bindActionBtn('btn-pause-save', () => {
+      localStorage.setItem('mc_arjun_official_save', JSON.stringify({
+        name: Config.worldName, seed: worldSeed, edits: Array.from(editedBlocks.entries()), inv: State.inv, hotbar: State.hotbar, armor: State.armorDefense
+      }));
+      showBriefItemLabel('World Saved!');
+      openModal(null);
+    });
+
+    bindActionBtn('btn-load-world', () => {
+      const raw = localStorage.getItem('mc_arjun_official_save');
+      if (!raw) return;
+      try {
+        const d = JSON.parse(raw);
+        Config.worldName = d.name || 'Saved World';
+        worldSeed = d.seed || 90210;
+        chunks.clear(); chunkMeshes.forEach(m => scene.remove(m)); chunkMeshes.clear(); editedBlocks.clear();
+        (d.edits || []).forEach(([k, v]) => editedBlocks.set(k, v));
+        if (d.inv) State.inv = d.inv;
+        if (d.hotbar) State.hotbar = d.hotbar;
+        if (d.armor) equipArmorItem(d.armor === 10 ? 33 : (d.armor === 6 ? 32 : 45));
+        lastChunkX = 9999;
+        openModal(null);
+      } catch (e) {}
+    });
+
+    bindActionBtn('btn-respawn', () => {
+      player.x = State.spawnX; player.y = State.spawnY; player.z = State.spawnZ;
+      player.vx = 0; player.vy = 0; player.vz = 0;
+      player.hp = 10; player.hunger = 10; player.oxygen = 10; updateVitals(); openModal(null);
+    });
+
+    // =========================================================================
+    // 9. INPUT CONTROLS (TOUCH + KEYBOARD/MOUSE)
+    // =========================================================================
+    const keys = {};
+    let joyX = 0, joyY = 0, jumpHeld = false;
+
+    window.addEventListener('keydown', e => {
+      if (introActive) return;
+      keys[e.code] = true;
+      if (!activeModal && e.code.startsWith('Digit')) {
+        const n = parseInt(e.code.replace('Digit', ''), 10);
+        if (n >= 1 && n <= 9) selectSlot(n - 1);
+      }
+      if (e.code === 'KeyE' && activeModal !== 'page-create-world') openModal(activeModal === 'page-inventory' ? null : 'page-inventory');
+      if (e.code === 'KeyV' && !activeModal) toggleCameraPerspective();
+      if (e.code === 'KeyF' && !activeModal) player.flyMode = !player.flyMode;
+      if (e.code === 'Escape') openModal(activeModal ? null : 'page-pause');
+    });
+    window.addEventListener('keyup', e => keys[e.code] = false);
+
+    renderer.domElement.addEventListener('mousedown', e => {
+      if (introActive || activeModal) return;
+      AudioEngine.init();
+      if (document.pointerLockElement !== renderer.domElement) {
+        renderer.domElement.requestPointerLock();
+        return;
+      }
+      if (e.button === 0) { miningHeld = true; hitOrEatAction(); }
+      if (e.button === 2) placeBlockAction();
+    });
+    window.addEventListener('mouseup', e => { if (e.button === 0) miningHeld = false; });
+    window.addEventListener('contextmenu', e => e.preventDefault());
+
+    window.addEventListener('mousemove', e => {
+      if (!introActive && !activeModal && document.pointerLockElement === renderer.domElement) {
+        player.targetYaw -= e.movementX * 0.0024 * Config.sens;
+        player.targetPitch = Math.max(-Math.PI/2+0.05, Math.min(Math.PI/2-0.05, player.targetPitch - e.movementY * 0.0024 * Config.sens));
+      }
+    });
+    window.addEventListener('wheel', e => {
+      if (!introActive && !activeModal) selectSlot((selectedSlot + (e.deltaY > 0 ? 1 : 8)) % 9);
+    });
+
+    const joyZone = document.getElementById('joystick-zone');
+    const joyKnob = document.getElementById('joystick-knob');
+    let joyPid = null;
+    function moveJoy(cx, cy) {
+      const r = joyZone.getBoundingClientRect();
+      const dx = cx - (r.left + r.width/2), dy = cy - (r.top + r.height/2);
+      const dist = Math.hypot(dx, dy), maxR = r.width/2 - 10;
+      const nx = dist > maxR ? (dx/dist)*maxR : dx;
+      const ny = dist > maxR ? (dy/dist)*maxR : dy;
+      joyKnob.style.transform = `translate(${nx}px, ${ny}px)`;
+      joyX = nx / maxR; joyY = -ny / maxR;
+    }
+    joyZone.addEventListener('pointerdown', e => { AudioEngine.init(); joyPid = e.pointerId; joyZone.setPointerCapture(e.pointerId); moveJoy(e.clientX, e.clientY); });
+    joyZone.addEventListener('pointermove', e => { if (e.pointerId === joyPid) moveJoy(e.clientX, e.clientY); });
+    const stopJoy = e => { if (e.pointerId === joyPid) { joyPid = null; joyKnob.style.transform = 'translate(0px,0px)'; joyX = 0; joyY = 0; } };
+    joyZone.addEventListener('pointerup', stopJoy);
+    joyZone.addEventListener('pointercancel', stopJoy);
+
+    const lookZone = document.getElementById('look-zone');
+    let lookPid = null, lx = 0, ly = 0;
+    lookZone.addEventListener('pointerdown', e => {
+      if (introActive || activeModal) return;
+      AudioEngine.init();
+      lookPid = e.pointerId; lx = e.clientX; ly = e.clientY;
+      lookZone.setPointerCapture(e.pointerId);
+    });
+    lookZone.addEventListener('pointermove', e => {
+      if (!introActive && !activeModal && e.pointerId === lookPid) {
+        player.targetYaw -= (e.clientX - lx) * 0.0055 * Config.sens;
+        player.targetPitch = Math.max(-Math.PI/2+0.05, Math.min(Math.PI/2-0.05, player.targetPitch - (e.clientY - ly) * 0.0055 * Config.sens));
+        lx = e.clientX; ly = e.clientY;
+      }
+    });
+    const stopLook = e => { if (e.pointerId === lookPid) lookPid = null; };
+    lookZone.addEventListener('pointerup', stopLook);
+    lookZone.addEventListener('pointercancel', stopLook);
+
+    const actMine = document.getElementById('act-mine');
+    actMine.addEventListener('pointerdown', e => { e.stopPropagation(); AudioEngine.init(); miningHeld = true; actMine.classList.add('pressed'); });
+    const endMine = () => { miningHeld = false; actMine.classList.remove('pressed'); };
+    actMine.addEventListener('pointerup', endMine);
+    actMine.addEventListener('pointercancel', endMine);
+
+    bindActionBtn('act-place', () => { AudioEngine.init(); placeBlockAction(); });
+    bindActionBtn('act-hit', () => { AudioEngine.init(); hitOrEatAction(); });
+
+    const actJump = document.getElementById('act-jump');
+    actJump.addEventListener('pointerdown', e => { e.stopPropagation(); AudioEngine.init(); jumpHeld = true; actJump.classList.add('pressed'); });
+    const endJump = () => { jumpHeld = false; actJump.classList.remove('pressed'); };
+    actJump.addEventListener('pointerup', endJump);
+    actJump.addEventListener('pointercancel', endJump);
+
+    const actSprint = document.getElementById('act-sprint');
+    bindActionBtn('act-sprint', () => {
+      player.sprinting = !player.sprinting;
+      actSprint.classList.toggle('toggled', player.sprinting);
+    });
+
+    // =========================================================================
+    // 10. SUB-STEPPED 3D PHYSICS & MOMENTUM ENGINE
+    // =========================================================================
+    function checkCollision(px, py, pz) {
+      const minX = Math.floor(px - player.radius), maxX = Math.floor(px + player.radius);
+      const minY = Math.floor(py), maxY = Math.floor(py + player.height);
+      const minZ = Math.floor(pz - player.radius), maxZ = Math.floor(pz + player.radius);
+      for (let x = minX; x <= maxX; x++) for (let y = minY; y <= maxY; y++) for (let z = minZ; z <= maxZ; z++) {
+        if (isSolid(x, y, z)) return true;
+      }
+      return false;
+    }
+
+    let worldTime = 9.0;
+    let lastChunkX = 9999, lastChunkZ = 9999;
+
+    function updateChunksStaggered() {
+      const pcx = Math.floor(player.x / CHUNK_SIZE), pcz = Math.floor(player.z / CHUNK_SIZE);
+      if (pcx !== lastChunkX || pcz !== lastChunkZ) {
+        lastChunkX = pcx; lastChunkZ = pcz;
+        const keep = new Set();
+        const rd = Config.renderDist;
+        for (let dx = -rd; dx <= rd; dx++) {
+          for (let dz = -rd; dz <= rd; dz++) {
+            const ck = `${pcx+dx},${pcz+dz}`;
+            keep.add(ck);
+            if (!chunkMeshes.has(ck) && !chunkQueue.includes(ck)) chunkQueue.push(ck);
+          }
+        }
+        chunkMeshes.forEach((m, ck) => {
+          if (!keep.has(ck)) { scene.remove(m); chunkMeshes.delete(ck); }
+        });
+      }
+
+      if (chunkQueue.length > 0) {
+        const nextKey = chunkQueue.shift();
+        const [cx, cz] = nextKey.split(',').map(Number);
+        rebuildChunkMesh(cx, cz);
+      }
+    }
+
+    function updateEnvironment(dt) {
+      worldTime = (worldTime + dt * 0.05) % 24;
+      const ang = ((worldTime - 6) / 24) * Math.PI * 2;
+      sunGroup.position.set(player.x + Math.cos(ang) * 55, Math.sin(ang) * 55, player.z - 20);
+      moonMesh.position.set(player.x - Math.cos(ang) * 55, -Math.sin(ang) * 55, player.z - 20);
+
+      let tSky = skyDay, sInt = 0.88;
+      if (worldTime >= 17.2 && worldTime < 19.5) { tSky = skySunset; sInt = 0.52; }
+      else if (worldTime >= 19.5 || worldTime < 5.5) { tSky = skyNight; sInt = 0.22; }
+
+      scene.background.lerp(tSky, dt * 1.5);
+      scene.fog.color.copy(scene.background);
+      sunLight.intensity = sInt;
+      hemiLight.intensity = Math.max(0.28, sInt * 0.7);
+
+      const eqId = getEquippedId();
+      const wantTorch = ITEMS[eqId]?.isLight || player.y < 7;
+      const targetTorch = wantTorch ? 1.25 : 0;
+      torchLight.intensity += (targetTorch - torchLight.intensity) * dt * 8;
+      if (torchLight.intensity > 0.05) torchLight.position.set(player.x, player.y + 1.4, player.z);
+    }
+
+    function updatePhysics(dt) {
+      const damp = Math.min(1, dt * 24);
+      player.yaw += (player.targetYaw - player.yaw) * damp;
+      player.pitch += (player.targetPitch - player.pitch) * damp;
+      player.rollTilt *= Math.pow(0.01, dt);
+      if (player.eatingAnim > 0) player.eatingAnim = Math.max(0, player.eatingAnim - dt);
+
+      let fwd = (keys['KeyW'] || keys['ArrowUp'] ? 1 : 0) - (keys['KeyS'] || keys['ArrowDown'] ? 1 : 0) + joyY;
+      let st = (keys['KeyD'] || keys['ArrowRight'] ? 1 : 0) - (keys['KeyA'] || keys['ArrowLeft'] ? 1 : 0) + joyX;
+      const len = Math.hypot(fwd, st);
+      if (len > 1) { fwd /= len; st /= len; }
+
+      const isSprint = (player.sprinting || keys['ShiftLeft']) && fwd > 0.2 && player.hunger > 2;
+      const bodyBlock = getBlock(player.x, player.y + 0.6, player.z);
+      const inWater = bodyBlock === 21;
+      const onVine = bodyBlock === 14 || getBlock(player.x, player.y + 1.2, player.z) === 14;
+      const headSubmerged = getBlock(player.x, player.y + player.eye, player.z) === 21;
+
+      const fx = document.getElementById('screen-fx');
+      if (headSubmerged) {
+        fx.style.background = 'rgba(12, 65, 160, 0.38)';
+        if (player.mode !== 'CREATIVE') {
+          player.breathTimer += dt;
+          if (player.breathTimer >= 1.5) {
+            player.breathTimer = 0;
+            if (player.oxygen > 0) { player.oxygen--; updateVitals(); }
+            else damagePlayer(1);
+          }
+        }
+      } else {
+        if (fx.style.background.includes('160')) fx.style.background = 'transparent';
+        if (player.oxygen < 10) {
+          player.oxygen = 10;
+          updateVitals();
+        }
+      }
+
+      if (player.mode !== 'CREATIVE' && Config.difficulty !== 'PEACEFUL') {
+        player.hungerClock += dt * (isSprint ? 2.0 : 0.4);
+        if (player.hungerClock >= 28) {
+          player.hungerClock = 0;
+          if (player.hunger > 0) { player.hunger--; updateVitals(); }
+          else damagePlayer(1);
+        }
+        if (player.hunger >= 8 && player.hp < 10) {
+          player.regenClock += dt;
+          if (player.regenClock >= 5.0) {
+            player.regenClock = 0;
+            player.hp = Math.min(10, player.hp + 1);
+            updateVitals();
+          }
+        }
+      }
+
+      const maxSpeed = player.flyMode ? 9.5 : (inWater ? 3.2 : (isSprint ? 6.4 : 4.6));
+      const sinY = Math.sin(player.yaw), cosY = Math.cos(player.yaw);
+      const wishVx = (-sinY * fwd + cosY * st) * maxSpeed;
+      const wishVz = (-cosY * fwd - sinY * st) * maxSpeed;
+
+      const underBlock = getBlock(player.x, player.y - 0.15, player.z);
+      const surfaceFriction = player.onGround ? (ITEMS[underBlock]?.friction || 10.0) : (inWater ? 6.0 : 3.5);
+      const accelRate = Math.min(1, dt * surfaceFriction);
+      player.vx += (wishVx - player.vx) * accelRate;
+      player.vz += (wishVz - player.vz) * accelRate;
+
+      if (inWater && Math.abs(player.z - getRiverCenterZ(player.x)) < 3.5) {
+        player.vx += 0.65 * dt;
+      }
+
+      const wantsJump = keys['Space'] || jumpHeld;
+      const subSteps = 2;
+      const sdt = dt / subSteps;
+      for (let step = 0; step < subSteps; step++) {
+        let blockedHoriz = false;
+        player.x += player.vx * sdt;
+        if (checkCollision(player.x, player.y, player.z)) {
+          player.x -= player.vx * sdt;
+          blockedHoriz = true;
+        }
+        player.z += player.vz * sdt;
+        if (checkCollision(player.x, player.y, player.z)) {
+          player.z -= player.vz * sdt;
+          blockedHoriz = true;
+        }
+
+        if (blockedHoriz && player.onGround && !player.flyMode && len > 0.2) {
+          if (!checkCollision(player.x + wishVx * 0.15, player.y + 1.05, player.z + wishVz * 0.15)) {
+            player.vy = 7.4;
+            player.onGround = false;
+          }
+        }
+
+        if (player.flyMode) {
+          let fy = 0;
+          if (wantsJump) fy = 6; else if (keys['KeyC']) fy = -6;
+          player.y += fy * sdt;
+          if (checkCollision(player.x, player.y, player.z)) player.y -= fy * sdt;
+        } else if (onVine) {
+          player.vy = wantsJump ? 3.8 : (fwd > 0.2 ? 3.2 : -2.2);
+          player.y += player.vy * sdt;
+          if (checkCollision(player.x, player.y, player.z)) player.y -= player.vy * sdt;
+          player.onGround = true;
+        } else {
+          if (wantsJump && (player.onGround || inWater)) {
+            player.vy = inWater ? 4.4 : 7.6;
+            player.onGround = false;
+          }
+          if (inWater) {
+            player.vy -= 6.5 * sdt;
+            player.vy *= Math.pow(0.25, sdt);
+          } else {
+            player.vy -= 22.0 * sdt;
+          }
+          player.y += player.vy * sdt;
+          if (checkCollision(player.x, player.y, player.z)) {
+            if (player.vy < -14) damagePlayer(Math.floor((Math.abs(player.vy) - 12.5) * 0.8));
+            if (player.vy < 0) player.onGround = true;
+            player.y -= player.vy * sdt;
+            player.vy = 0;
+          } else {
+            player.onGround = false;
+          }
+        }
+      }
+
+      const moveMag = Math.hypot(player.vx, player.vz);
+      if (moveMag > 0.45 && (player.onGround || inWater) && !player.flyMode) {
+        player.stepAccum += moveMag * dt;
+        if (player.stepAccum > 2.05) {
+          player.stepAccum = 0;
+          AudioEngine.playWalk(inWater ? 'water' : (ITEMS[underBlock]?.snd || 'grass'));
+        }
+      }
+
+      if (moveMag > 0.25 && (player.onGround || player.flyMode)) bobTime += dt * (isSprint ? 7 : 5); else bobTime = 0;
+      let sy = 0, sz = 0, rx = 0;
+      if (isSwinging) {
+        swingProg += dt * 12;
+        if (swingProg >= Math.PI) { swingProg = 0; isSwinging = false; }
+        else { const s = Math.sin(swingProg); sy = -s * 0.18; sz = -s * 0.22; rx = -s * 0.95; }
+      }
+
+      const eatOffsetX = player.eatingAnim > 0 ? -0.25 : 0;
+      const eatOffsetY = player.eatingAnim > 0 ? Math.abs(Math.sin(player.eatingAnim * 35)) * 0.14 : 0;
+
+      if (player.thirdPerson) {
+        avatar.group.position.set(player.x, player.y, player.z);
+        avatar.group.rotation.y = player.yaw + Math.PI;
+        avatar.head.rotation.x = -player.pitch;
+        const limbSwing = Math.sin(bobTime * 2) * 0.65;
+        avatar.legL.rotation.x = limbSwing;
+        avatar.legR.rotation.x = -limbSwing;
+        avatar.armL.rotation.x = -limbSwing;
+        avatar.armR.rotation.x = limbSwing - rx * 1.2;
+
+        const camDist = 3.5;
+        const dir = new THREE.Vector3(0, 0, 1).applyEuler(new THREE.Euler(player.pitch, player.yaw, 0, 'YXZ'));
+        camera.position.set(player.x + dir.x * camDist, player.y + player.eye + dir.y * camDist + 0.35, player.z + dir.z * camDist);
+      } else {
+        const walkBobY = (moveMag > 0.3 && player.onGround) ? Math.sin(bobTime * 2) * 0.032 : 0;
+        camera.position.set(player.x, player.y + player.eye + walkBobY, player.z);
+      }
+
+      camera.rotation.order = 'YXZ';
+      camera.rotation.y = player.yaw;
+      camera.rotation.x = player.pitch;
+      camera.rotation.z = player.rollTilt;
+
+      if (handGroup) {
+        handGroup.position.set(
+          0.54 + Math.cos(bobTime)*0.03 + eatOffsetX,
+          -0.4 + Math.abs(Math.sin(bobTime))*0.035 + sy + eatOffsetY,
+          -0.82 + sz
+        );
+        handGroup.rotation.set(0.2 + rx, -0.55, 0.1);
+      }
+    }
+
+    // Initial Spawn Setup overlooking the River & Mountain Waterfall
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dz = -1; dz <= 1; dz++) {
+        rebuildChunkMesh(dx, dz);
+      }
+    }
+    player.y = getSurfaceHeight(0, 0) + 1.5;
+    State.spawnY = player.y;
+    setBlock(0, getSurfaceHeight(0, -2) + 1, -2, 46);
+    spawnMob('pig', 3.5, -2.5);
+    spawnMob('sheep', -3.5, 2.5);
+    spawnMob('cow', 4.5, 3.5);
+    spawnMob('zombie', -6.5, -5.5);
+
+    selectSlot(0);
+    updateVitals();
+    renderMenus();
+
+    let lastTime = performance.now();
+    let frameCounter = 0, fpsTimer = 0, currentFps = 60;
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+
+      // Play the 20-Second 5-Act 3D Minecraft Monolith Intro Sequence first
+      if (introActive) {
+        updateAndRenderIntro(now);
+        return;
+      }
+
+      frameCounter++;
+      fpsTimer += dt;
+      if (fpsTimer >= 0.5) {
+        currentFps = Math.min(60, Math.round(frameCounter / fpsTimer));
+        frameCounter = 0;
+        fpsTimer = 0;
+      }
+
+      cloudGroup.children.forEach(c => {
+        c.position.x += dt * 0.4;
+        if (c.position.x - player.x > 55) c.position.x -= 110;
+      });
+
+      updateChunksStaggered();
+      updateAnimatedObjects(dt);
+
+      if (!activeModal) {
+        updatePhysics(dt);
+        updateEnvironment(dt);
+        updateRaycastAndMining(dt);
+        updateMobs(dt, now);
+        updateParticles(dt);
+
+        const phaseStr = (worldTime >= 6 && worldTime < 18) ? 'DAY' : 'NIGHT';
+        document.getElementById('hud-telemetry').textContent =
+          `XYZ: ${Math.floor(player.x)}, ${Math.floor(player.y)}, ${Math.floor(player.z)} | ${phaseStr} | ${currentFps} FPS`;
+      } else {
+        player.targetYaw += dt * 0.14;
+        player.yaw = player.targetYaw;
+        camera.position.set(player.x, player.y + 4.2, player.z);
+        camera.rotation.order = 'YXZ';
+        camera.rotation.y = player.yaw;
+        camera.rotation.x = -0.18;
+      }
+
+      renderer.clear();
+      renderer.render(scene, camera);
+      if (!activeModal && !player.thirdPerson) {
+        renderer.clearDepth();
+        renderer.render(handScene, handCam);
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      introCam.aspect = window.innerWidth / window.innerHeight;
+      introCam.updateProjectionMatrix();
+      handCam.aspect = window.innerWidth / window.innerHeight;
+      handCam.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    requestAnimationFrame(animate);
+  </script> <!-- ==================== PEERJS MULTIPLAYER + PLAYER NAVIGATION SYSTEM ==================== -->
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script>
+(() => {
+  // 1. CSS for Multiplayer Lobby + Top Navigation Compass Bar
+  const mpStyle = document.createElement('style');
+  mpStyle.textContent = `
+    #mp-top-btn {
+      position: fixed; top: 38px; left: 6px; z-index: 55;
+      background: #389e48; border-top: 2px solid #6ee081; border-left: 2px solid #6ee081;
+      border-right: 2px solid #194d21; border-bottom: 2px solid #194d21;
+      outline: 1.5px solid #000; color: #fff; font-size: 10px; font-weight: 900;
+      padding: 4px 9px; cursor: pointer; text-shadow: 1px 1px 0 #000; font-family: monospace;
+    }
+    #nav-compass-hud {
+      position: fixed; top: 6px; left: 50%; transform: translateX(-50%);
+      z-index: 48; background: rgba(16, 18, 24, 0.85);
+      border: 1.5px solid #5a5d6e; outline: 1px solid #000;
+      padding: 3px 10px; display: none; flex-direction: column; align-items: center;
+      gap: 2px; min-width: 175px; pointer-events: auto; cursor: pointer;
+    }
+    #nav-compass-strip {
+      position: relative; width: 155px; height: 14px; background: #111318;
+      border: 1px solid #333; overflow: hidden; display: flex; align-items: center; justify-content: center;
+    }
+    #nav-compass-center-tick {
+      position: absolute; top: 0; bottom: 0; left: 50%; width: 2px;
+      background: #ffffff; transform: translateX(-50%); z-index: 2;
+    }
+    #nav-target-blip {
+      position: absolute; top: 1px; font-size: 10px; font-weight: 900;
+      color: #4ff3ff; text-shadow: 0 0 4px #000, 1px 1px 0 #000;
+      transform: translateX(-50%); z-index: 3; transition: left 0.05s linear;
+    }
+    #nav-target-info {
+      font-size: 9.5px; font-weight: 800; color: #f5a623;
+      text-shadow: 1px 1px 0 #000; white-space: nowrap;
+    }
+    #mp-modal {
+      position: fixed; inset: 0; z-index: 250; background: rgba(0,0,0,0.78);
+      display: none; align-items: center; justify-content: center; padding: 12px;
+    }
+    #mp-card {
+      background: #2b2d36; border-top: 3px solid #6c6e78; border-left: 3px solid #6c6e78;
+      border-right: 3px solid #18191c; border-bottom: 3px solid #18191c;
+      outline: 2px solid #000; padding: 12px; width: min(92vw, 370px);
+      color: #fff; font-family: monospace; display: flex; flex-direction: column; gap: 8px;
+    }
+    .mp-row { display: flex; gap: 6px; }
+    .mp-inp {
+      flex: 1; background: #111; border: 1.5px solid #666; color: #fff;
+      padding: 6px 8px; font-size: 11.5px; font-weight: 800; font-family: monospace;
+    }
+    #mp-status { font-size: 10.5px; color: #f5a623; font-weight: 800; }
+    #mp-player-list {
+      display: flex; flex-direction: column; gap: 5px; max-height: 130px; overflow-y: auto;
+      background: #1b1d24; border: 1px solid #3c404d; padding: 6px;
+    }
+    .mp-player-row {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #262933; padding: 4px 7px; border: 1px solid #454959; font-size: 10.5px;
+    }
+    .mp-mini-btn {
+      background: #389e48; border: 1px solid #6ee081; color: #fff;
+      font-size: 9.5px; font-weight: 800; padding: 3px 6px; cursor: pointer; font-family: monospace;
+    }
+    .mp-mini-btn.tp { background: #d9822b; border-color: #ffc266; }
+  `;
+  document.head.appendChild(mpStyle);
+
+  // Top-Left MP Button
+  const mpBtn = document.createElement('button');
+  mpBtn.id = 'mp-top-btn';
+  mpBtn.type = 'button';
+  mpBtn.textContent = '🌐 MP & NAV (1)';
+  document.body.appendChild(mpBtn);
+
+  // Top-Center Navigation Compass HUD
+  const navHud = document.createElement('div');
+  navHud.id = 'nav-compass-hud';
+  navHud.title = 'Tap to toggle 3D Guidance Trail';
+  navHud.innerHTML = `
+    <div id="nav-compass-strip">
+      <span style="font-size:8.5px;color:#777;letter-spacing:14px;">W · N · E</span>
+      <div id="nav-compass-center-tick"></div>
+      <div id="nav-target-blip">◆</div>
+    </div>
+    <div id="nav-target-info">Tracking: None</div>
+  `;
+  document.body.appendChild(navHud);
+
+  // Multiplayer & Navigation Modal
+  const mpModal = document.createElement('div');
+  mpModal.id = 'mp-modal';
+  mpModal.innerHTML = `
+    <div id="mp-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #18191c;padding-bottom:5px;">
+        <strong style="font-size:12.5px;">🌐 MULTIPLAYER & PLAYER RADAR</strong>
+        <button class="btn-close" id="mp-close" type="button">✕</button>
+      </div>
+      <div class="mp-row">
+        <input class="mp-inp" id="mp-name" placeholder="Your Name" value="Arjun_${Math.floor(Math.random()*90+10)}" maxlength="12"/>
+      </div>
+      <div class="mp-row">
+        <button class="btn primary" id="mp-host-btn" type="button" style="flex:1;">Create Room</button>
+        <input class="mp-inp" id="mp-code-inp" placeholder="4-Digit Code" maxlength="6" style="max-width:105px;"/>
+        <button class="btn" id="mp-join-btn" type="button">Join</button>
+      </div>
+      <div id="mp-status">Status: Singleplayer (Create or Join a Room)</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;">
+        <span style="font-size:10px;color:#aeb2c2;font-weight:800;">CONNECTED PLAYERS (NAVIGATE / TP)</span>
+        <button class="mp-mini-btn" id="mp-toggle-trail" type="button">3D Trail: ON</button>
+      </div>
+      <div id="mp-player-list">
+        <div style="font-size:10px;color:#888;text-align:center;">No other players connected yet</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(mpModal);
+
+  mpBtn.addEventListener('pointerdown', e => {
+    e.stopPropagation();
+    mpModal.style.display = 'flex';
+    renderPlayerRadarList();
+  });
+  document.getElementById('mp-close').addEventListener('pointerdown', e => {
+    e.stopPropagation();
+    mpModal.style.display = 'none';
+  });
+
+  // 2. Remote Players, 3D Sky Beacon & 3D Guidance Trail Setup
+  const remotePlayers = new Map(); // peerId -> { name, group, beacon, legL, legR, armL, armR, tx, ty, tz, yaw, walkPhase }
+  let peer = null;
+  const connections = new Map();
+  let isHost = false;
+  let trackedPeerId = null;
+  let show3DTrail = true;
+
+  // 3D Guidance Trail Nodes (10 glowing cyan stepping stones from player to target)
+  const trailGroup = new THREE.Group();
+  const trailNodes = [];
+  const trailGeo = new THREE.BoxGeometry(0.18, 0.08, 0.35);
+  const trailMat = new THREE.MeshBasicMaterial({ color: 0x4ff3ff, transparent: true, opacity: 0.78 });
+  for (let i = 0; i < 10; i++) {
+    const node = new THREE.Mesh(trailGeo, trailMat);
+    node.visible = false;
+    trailGroup.add(node);
+    trailNodes.push(node);
+  }
+  scene.add(trailGroup);
+
+  document.getElementById('mp-toggle-trail').addEventListener('pointerdown', e => {
+    e.stopPropagation();
+    show3DTrail = !show3DTrail;
+    e.currentTarget.textContent = `3D Trail: ${show3DTrail ? 'ON' : 'OFF'}`;
+  });
+  navHud.addEventListener('pointerdown', e => {
+    e.stopPropagation();
+    show3DTrail = !show3DTrail;
+    document.getElementById('mp-toggle-trail').textContent = `3D Trail: ${show3DTrail ? 'ON' : 'OFF'}`;
+  });
+
+  function createRemotePlayerMesh(name) {
+    const group = new THREE.Group();
+    const skinMat = fastMat(TexAssets.playerSkin);
+    const faceMat = fastMat(TexAssets.playerFace);
+    const shirtMat = new THREE.MeshLambertMaterial({ color: 0x389e48 });
+    const pantsMat = fastMat(TexAssets.playerPants);
+
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.46, 0.46), [
+      skinMat, skinMat, skinMat, skinMat, faceMat, skinMat
+    ]);
+    head.position.y = 1.48;
+
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.68, 0.24), shirtMat);
+    body.position.y = 0.91;
+
+    const armGeo = new THREE.BoxGeometry(0.2, 0.64, 0.2);
+    const armL = new THREE.Mesh(armGeo, shirtMat); armL.position.set(-0.34, 0.91, 0);
+    const armR = new THREE.Mesh(armGeo, shirtMat); armR.position.set( 0.34, 0.91, 0);
+
+    const legGeo = new THREE.BoxGeometry(0.21, 0.58, 0.21);
+    const legL = new THREE.Mesh(legGeo, pantsMat); legL.position.set(-0.12, 0.29, 0);
+    const legR = new THREE.Mesh(legGeo, pantsMat); legR.position.set( 0.12, 0.29, 0);
+
+    // Vertical Sky Beacon Beam so you can spot friends behind mountains!
+    const beacon = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, 26, 0.12),
+      new THREE.MeshBasicMaterial({ color: 0x4ff3ff, transparent: true, opacity: 0.38, depthWrite: false })
+    );
+    beacon.position.y = 13;
+
+    // Floating Name & Distance Sprite
+    const nc = document.createElement('canvas');
+    nc.width = 190; nc.height = 44;
+    const spriteTex = new THREE.CanvasTexture(nc);
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: spriteTex, depthTest: false }));
+    sprite.scale.set(1.8, 0.42, 1);
+    sprite.position.y = 2.15;
+    sprite.renderOrder = 10;
+
+    group.add(head, body, armL, armR, legL, legR, beacon, sprite);
+    scene.add(group);
+
+    return {
+      name: name || 'Player',
+      group, beacon, legL, legR, armL, armR,
+      labelCanvas: nc, labelTex: spriteTex,
+      tx: 0.5, ty: 12, tz: 0.5, yaw: 0, walkPhase: 0, lastDist: -1
+    };
+  }
+
+  function updateRemoteNameplate(rp, distMeters) {
+    const distInt = Math.round(distMeters);
+    if (rp.lastDist === distInt) return;
+    rp.lastDist = distInt;
+    const ctx = rp.labelCanvas.getContext('2d');
+    ctx.clearRect(0, 0, 190, 44);
+    ctx.fillStyle = 'rgba(10, 12, 18, 0.75)';
+    ctx.fillRect(4, 4, 182, 34);
+    ctx.strokeStyle = '#4ff3ff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(4, 4, 182, 34);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 14px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${rp.name} [${distInt}m]`, 95, 26);
+    rp.labelTex.needsUpdate = true;
+  }
+
+  function renderPlayerRadarList() {
+    const container = document.getElementById('mp-player-list');
+    if (!container) return;
+    if (remotePlayers.size === 0) {
+      container.innerHTML = `<div style="font-size:10px;color:#888;text-align:center;">No other players connected yet</div>`;
+      return;
+    }
+    container.innerHTML = '';
+    remotePlayers.forEach((rp, pid) => {
+      const dist = Math.round(Math.hypot(rp.tx - player.x, rp.ty - player.y, rp.tz - player.z));
+      const row = document.createElement('div');
+      row.className = 'mp-player-row';
+      const isTracked = trackedPeerId === pid;
+      row.innerHTML = `
+        <div>
+          <strong style="color:${isTracked ? '#4ff3ff' : '#fff'}">${rp.name}</strong>
+          <span style="color:#aaa;font-size:9.5px;"> (${dist}m away)</span>
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button class="mp-mini-btn" data-track="${pid}" type="button">${isTracked ? '📍 Tracking' : '🎯 Track'}</button>
+          <button class="mp-mini-btn tp" data-tp="${pid}" type="button">⚡ TP</button>
+        </div>
+      `;
+      row.querySelector('[data-track]').addEventListener('pointerdown', e => {
+        e.stopPropagation();
+        trackedPeerId = pid;
+        renderPlayerRadarList();
+      });
+      row.querySelector('[data-tp]').addEventListener('pointerdown', e => {
+        e.stopPropagation();
+        trackedPeerId = pid;
+        // Teleport player safely next to the target friend!
+        player.x = rp.tx + 1.2;
+        player.y = rp.ty + 0.5;
+        player.z = rp.tz + 1.2;
+        player.vx = 0; player.vy = 0; player.vz = 0;
+        AudioEngine.pickupPop();
+        mpModal.style.display = 'none';
+        showBriefItemLabel(`Teleported to ${rp.name}!`);
+      });
+      container.appendChild(row);
+    });
+  }
+
+  function broadcast(packet, excludePeerId = null) {
+    connections.forEach((conn, pid) => {
+      if (pid !== excludePeerId && conn.open) conn.send(packet);
+    });
+  }
+
+  let suppressBlockSync = false;
+  const origSetBlock = setBlock;
+  setBlock = function(x, y, z, id) {
+    origSetBlock(x, y, z, id);
+    if (!suppressBlockSync && connections.size > 0) {
+      broadcast({ type: 'BLOCK', x: Math.floor(x), y: Math.floor(y), z: Math.floor(z), id });
+    }
+  };
+
+  function setupConnection(conn) {
+    conn.on('open', () => {
+      connections.set(conn.peer, conn);
+      updateStatusBadge();
+      if (isHost) {
+        conn.send({
+          type: 'INIT_WORLD',
+          seed: worldSeed,
+          edits: Array.from(editedBlocks.entries())
+        });
+      }
+    });
+
+    conn.on('data', data => {
+      if (!data || !data.type) return;
+
+      if (data.type === 'INIT_WORLD') {
+        worldSeed = data.seed;
+        chunks.clear();
+        chunkMeshes.forEach(m => scene.remove(m));
+        chunkMeshes.clear();
+        editedBlocks.clear();
+        (data.edits || []).forEach(([k, v]) => editedBlocks.set(k, v));
+        lastChunkX = 9999;
+      }
+      else if (data.type === 'MOVE') {
+        let rp = remotePlayers.get(conn.peer);
+        if (!rp) {
+          rp = createRemotePlayerMesh(data.name);
+          remotePlayers.set(conn.peer, rp);
+          if (!trackedPeerId) trackedPeerId = conn.peer; // Auto-track first friend who joins
+          renderPlayerRadarList();
+        }
+        rp.name = data.name || rp.name;
+        rp.tx = data.x; rp.ty = data.y; rp.tz = data.z; rp.yaw = data.yaw;
+        if (isHost) broadcast(data, conn.peer);
+      }
+      else if (data.type === 'BLOCK') {
+        suppressBlockSync = true;
+        setBlock(data.x, data.y, data.z, data.id);
+        suppressBlockSync = false;
+        if (isHost) broadcast(data, conn.peer);
+      }
+    });
+
+    conn.on('close', () => {
+      connections.delete(conn.peer);
+      const rp = remotePlayers.get(conn.peer);
+      if (rp) { scene.remove(rp.group); remotePlayers.delete(conn.peer); }
+      if (trackedPeerId === conn.peer) {
+        trackedPeerId = remotePlayers.keys().next().value || null;
+      }
+      updateStatusBadge();
+      renderPlayerRadarList();
+    });
+  }
+
+  function updateStatusBadge() {
+    mpBtn.textContent = `🌐 MP & NAV (${connections.size + 1})`;
+    navHud.style.display = remotePlayers.size > 0 ? 'flex' : 'none';
+  }
+
+  // Create Room (Host)
+  document.getElementById('mp-host-btn').addEventListener('pointerdown', e => {
+    e.stopPropagation();
+    const roomCode = String(Math.floor(1000 + Math.random() * 9000));
+    const statusEl = document.getElementById('mp-status');
+    statusEl.textContent = 'Creating Room...';
+    isHost = true;
+    if (peer) peer.destroy();
+    peer = new Peer('mc-arjun-' + roomCode);
+    peer.on('open', () => {
+      statusEl.innerHTML = `✅ Room Active! Code: <span style="color:#6ee081;font-size:14px;">${roomCode}</span>`;
+      updateStatusBadge();
+    });
+    peer.on('connection', conn => setupConnection(conn));
+  });
+
+  // Join Room
+  document.getElementById('mp-join-btn').addEventListener('pointerdown', e => {
+    e.stopPropagation();
+    const code = document.getElementById('mp-code-inp').value.trim();
+    if (!code) return;
+    const statusEl = document.getElementById('mp-status');
+    statusEl.textContent = `Connecting to Room ${code}...`;
+    isHost = false;
+    if (peer) peer.destroy();
+    peer = new Peer();
+    peer.on('open', () => {
+      const conn = peer.connect('mc-arjun-' + code);
+      setupConnection(conn);
+      statusEl.textContent = `✅ Connected to Room ${code}!`;
+    });
+  });
+
+  // Broadcast local position at 20Hz
+  setInterval(() => {
+    if (connections.size > 0) {
+      const myName = document.getElementById('mp-name').value.trim() || 'Player';
+      broadcast({
+        type: 'MOVE',
+        name: myName,
+        x: Number(player.x.toFixed(2)),
+        y: Number(player.y.toFixed(2)),
+        z: Number(player.z.toFixed(2)),
+        yaw: Number(player.yaw.toFixed(2))
+      });
+    }
+  }, 50);
+
+  // 3. Real-Time Compass Blip, 3D Guidance Trail & Remote Avatar Loop
+  const blipEl = document.getElementById('nav-target-blip');
+  const infoEl = document.getElementById('nav-target-info');
+
+  function updateNavigationAndAvatars(now) {
+    requestAnimationFrame(updateNavigationAndAvatars);
+
+    // If trackedPeerId disconnected, pick closest available player
+    if (!trackedPeerId || !remotePlayers.has(trackedPeerId)) {
+      trackedPeerId = remotePlayers.keys().next().value || null;
+    }
+
+    remotePlayers.forEach((rp, pid) => {
+      const dx = rp.tx - rp.group.position.x;
+      const dz = rp.tz - rp.group.position.z;
+      const stepDist = Math.hypot(dx, dz);
+
+      rp.group.position.x += dx * 0.25;
+      rp.group.position.y += (rp.ty - rp.group.position.y) * 0.25;
+      rp.group.position.z += dz * 0.25;
+      rp.group.rotation.y = rp.yaw + Math.PI;
+
+      const distToMe = Math.hypot(rp.group.position.x - player.x, rp.group.position.y - player.y, rp.group.position.z - player.z);
+      updateRemoteNameplate(rp, distToMe);
+
+      // Show Sky Beacon Pillar when player is > 12m away
+      rp.beacon.visible = distToMe > 12;
+
+      if (stepDist > 0.025) {
+        rp.walkPhase += 0.28;
+        const sw = Math.sin(rp.walkPhase) * 0.62;
+        rp.legL.rotation.x = sw; rp.legR.rotation.x = -sw;
+        rp.armL.rotation.x = -sw; rp.armR.rotation.x = sw;
+      } else {
+        rp.legL.rotation.x *= 0.8; rp.legR.rotation.x *= 0.8;
+      }
+    });
+
+    // Update Top Compass Bar & 3D Guidance Trail toward Tracked Player
+    if (trackedPeerId && remotePlayers.has(trackedPeerId)) {
+      navHud.style.display = 'flex';
+      const target = remotePlayers.get(trackedPeerId);
+      const tx = target.group.position.x;
+      const ty = target.group.position.y;
+      const tz = target.group.position.z;
+
+      const dx = tx - player.x;
+      const dy = ty - player.y;
+      const dz = tz - player.z;
+      const dist = Math.hypot(dx, dy, dz);
+
+      // Compute relative bearing angle between player's camera look direction and target player
+      // Forward vector in Three.js is (-sin(yaw), -cos(yaw))
+      const angleToTarget = Math.atan2(-dx, -dz);
+      let relAngle = angleToTarget - player.yaw;
+      while (relAngle > Math.PI) relAngle -= Math.PI * 2;
+      while (relAngle < -Math.PI) relAngle += Math.PI * 2;
+
+      // Map [-90 deg, +90 deg] to [8%, 92%] on the compass strip
+      const norm = Math.max(-1, Math.min(1, -relAngle / (Math.PI * 0.55)));
+      const pct = 50 + norm * 42;
+      blipEl.style.left = `${pct}%`;
+
+      const vertArrow = dy > 2.5 ? '▲' : (dy < -2.5 ? '▼' : '●');
+      infoEl.textContent = `🎯 ${target.name} • ${Math.round(dist)}m ${vertArrow}`;
+
+      // Update 3D Stepping-Stone Guidance Trail in World Space
+      const horizDist = Math.hypot(dx, dz);
+      const dirAngle = Math.atan2(dx, dz);
+      trailNodes.forEach((node, idx) => {
+        if (!show3DTrail || horizDist < 2.5) {
+          node.visible = false;
+          return;
+        }
+        node.visible = true;
+        const stepMeters = 1.6 + idx * 1.4;
+        if (stepMeters >= horizDist - 0.8) {
+          node.visible = false;
+          return;
+        }
+        const nx = player.x + Math.sin(dirAngle) * stepMeters;
+        const nz = player.z + Math.cos(dirAngle) * stepMeters;
+        const ny = getSurfaceHeight(Math.floor(nx), Math.floor(nz)) + 1.08 + Math.sin(now * 0.008 - idx * 0.6) * 0.06;
+        node.position.set(nx, ny, nz);
+        node.rotation.y = dirAngle;
+      });
+    } else {
+      navHud.style.display = 'none';
+      trailNodes.forEach(n => n.visible = false);
+    }
+  }
+
+  requestAnimationFrame(updateNavigationAndAvatars);
+})();
+</script>
+
+</body>
+</html>
